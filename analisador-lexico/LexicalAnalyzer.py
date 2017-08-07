@@ -40,14 +40,14 @@ class LexicalAnalyzer(object):
                 token += program[i]
                 i+=1
                 while i < tam-1:    #Procura por mais letras ou números
-                    if program[i].isalpha() or program[i].isdigit():
+                    if program[i].isalpha() or program[i].isdigit() or program[i] is "_":
                         token += program[i]
                         i+=1
                     else:
                         break
 
                 if token in self.key_words:     #Verfica se é uma das palavras-chave
-                    lex = "Palavra-chave"
+                    lex = "Palavra Reservada"
                 elif token is "or":     #Verificar se é o Operador "or"
                     lex = "Operador Aditivo"
                 elif token is "and":    #Verificar se é o Operador "and"
@@ -103,19 +103,37 @@ class LexicalAnalyzer(object):
                 lex = "Operador Multiplicativo"
 
             elif program[i] is "{":     #Verificar se é início de comentário
+                ln = line_count
                 while i < tam -1:
                     i+=1
                     if program[i] is "}":   #Verificar se é fim de comentário
+                        i+=1
+                        break
+                    elif program[i] is "\n":
+                        line_count += 1
+
+                else:
+                    if program[-1] != "}":
+                        print ("ERRO: Comentário aberto e não fechado. Linhas: "+str(ln))
                         break
                 continue
+
+            elif program[i] is "}":
+                print("ERRO: Token '}' insperado. Linha: "+str(line_count))
+                break
 
             elif program[i] == "\n":    #Contagem das linhas
                 line_count += 1
                 i+=1
                 continue
-            else:       #Ignorar qualquer outra caracter
+
+            elif program[i].isspace():       #Ignorar qualquer outra caracter
                 i+=1
                 continue
+
+            else:   #Caso seja um character não aceito pela linguagem
+                print("ERRO: Token '"+program[i]+"' não aceito. Linha: "+str(line_count))
+                break
 
             result.append([token,lex,line_count])
             token = ""
