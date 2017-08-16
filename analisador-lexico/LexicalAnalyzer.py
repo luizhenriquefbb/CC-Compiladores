@@ -1,9 +1,19 @@
 import sys
 
-class LexicalAnalyzer(object):
-    """docstring for LexicalAnalyzer."""
+class Token:
+    def __init__(self, word, lex, line):
+        self.word = word
+        self.lex = lex
+        self.line = line
+
+    def __str__(self):
+        return self.word+"\t"+self.lex+"\t"+str(self.line)
+
+
+class LexicalAnalyzer:
     def __init__(self):
         self.key_words = ["program", "var", "integer", "real", "boolean", "procedure", "begin","end", "if", "then", "else", "while", "do", "not"]
+
     def analyze(self,program,i=0):
         line_count = 1
         token = ""
@@ -39,7 +49,7 @@ class LexicalAnalyzer(object):
             elif program[i].isalpha():      #Verifica se o elemento é uma letra
                 token += program[i]
                 i+=1
-                while i < tam-1:    #Procura por mais letras ou números
+                while i < tam-1:    #Procura por mais letras ou números ou _
                     if program[i].isalpha() or program[i].isdigit() or program[i] is "_":
                         token += program[i]
                         i+=1
@@ -75,7 +85,7 @@ class LexicalAnalyzer(object):
                 i+=1
                 lex = "Operador Relacional"
 
-            elif program[i] is "<": #Verificar se são os operadores relacionais "<" ou "=>" ou "<>"
+            elif program[i] is "<": #Verificar se são os operadores relacionais "<" ou "<=" ou "<>"
                 token = "<"
                 i+=1
                 lex = "Operador Relacional"
@@ -83,7 +93,8 @@ class LexicalAnalyzer(object):
                 if program[i] in "=>":
                     token += program[i]
                     i+=1
-            elif program[i] is ">":     #Verificar se são os operadores relacionais ">" ou ">=s"
+
+            elif program[i] is ">":     #Verificar se são os operadores relacionais ">" ou ">="
                 token = ">"
                 i+=1
                 lex = "Operador Relacional"
@@ -114,12 +125,12 @@ class LexicalAnalyzer(object):
 
                 else:
                     if program[-1] != "}":
-                        print ("ERRO: Comentário aberto e não fechado. Linhas: "+str(ln))
+                        print ("ERRO: Comentário aberto e não fechado. Linha: "+str(ln))
                         break
                 continue
 
             elif program[i] is "}":
-                print("ERRO: Token '}' insperado. Linha: "+str(line_count))
+                print("ERRO: Token '}' inesperado. Linha: "+str(line_count))
                 break
 
             elif program[i] == "\n":    #Contagem das linhas
@@ -127,7 +138,7 @@ class LexicalAnalyzer(object):
                 i+=1
                 continue
 
-            elif program[i].isspace():       #Ignorar qualquer outra caracter
+            elif program[i].isspace():       #Ignorar qualquer outra caracter de espaço
                 i+=1
                 continue
 
@@ -135,15 +146,14 @@ class LexicalAnalyzer(object):
                 print("ERRO: Token '"+program[i]+"' não aceito. Linha: "+str(line_count))
                 break
 
-            result.append([token,lex,line_count])
+            #result.append([token,lex,line_count])
+            result.append(Token(token,lex,line_count))
             token = ""
 
         return result
 
 
 if __name__ == "__main__":
-     file_name = sys.argv[1]
-     program = open(file_name,"r").read()
-
-     for ln in LexicalAnalyzer().analyze(program):
-         print (ln)
+     with open(sys.argv[1],"r") as program:
+         for ln in LexicalAnalyzer().analyze(program.read()):
+             print (ln)
