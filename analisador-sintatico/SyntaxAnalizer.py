@@ -17,7 +17,7 @@ class SyntaxAnalyzer():
             self.index += 1
             print (self.current)
             return self.current
-        
+
         sys.exit("Erro: O programa terminou, mas a análise não")
         return None
 
@@ -44,7 +44,7 @@ class SyntaxAnalyzer():
             self.lista_declaracoes_variaveis()
         else:
             self.index -= 1
-    
+
     def lista_declaracoes_variaveis(self):
         if self.lista_de_identificadores():
             if self.next().word == ":":
@@ -57,7 +57,7 @@ class SyntaxAnalyzer():
                 sys.exit("O ':' não foi encontrado")
         else:
             sys.exit("Era esperado um identificador")
-    
+
     def lista_declaracoes_variaveis_ln(self):
         if self.lista_de_identificadores():
             if self.next().word == ":":
@@ -69,7 +69,7 @@ class SyntaxAnalyzer():
                     sys.exit("O ';' não enontrado")
             else:
                 sys.exit("O ':' não foi encontrado")
-    
+
     def lista_de_identificadores(self):
         if self.next().lex == "Identificador":
             self.lista_de_identificadores_ln()
@@ -77,7 +77,7 @@ class SyntaxAnalyzer():
         else:
             self.index -= 1
             return False
-    
+
     def lista_de_identificadores_ln(self):
         if self.next().word == ",":
             if self.next().lex == "Identificador":
@@ -96,7 +96,7 @@ class SyntaxAnalyzer():
 
     def declaracoes_subprogramas(self):
         self.declaracoes_subprogramas_ln()
-    
+
     def declaracoes_subprogramas_ln(self):
         if self.declaracao_subprograma():
             if self.next().word == ";":
@@ -104,7 +104,7 @@ class SyntaxAnalyzer():
                 pass
             else:
                 sys.exit("Declaração de subprograma sem ';'")
-    
+
     def declaracao_subprograma(self):
         if self.next().word == "procedure":
             if self.next().lex == "Identificador":
@@ -121,7 +121,7 @@ class SyntaxAnalyzer():
         else:
             self.index -= 1
             return False
-        
+
     def argumentos(self):
         if self.next().word == "(":
             self.lista_de_parametros()
@@ -131,7 +131,7 @@ class SyntaxAnalyzer():
                 sys.exit("Era esperado um ')'")
         else:
             self.index -= 1
-    
+
     def lista_de_parametros(self):
         self.lista_de_identificadores()
         if self.next().word == ":":
@@ -147,7 +147,7 @@ class SyntaxAnalyzer():
             self.lista_de_parametros_ln()
         else:
             self.index -= 1
-    
+
     def comando_composto(self):
         if self.next().word == "begin":
             self.comandos_opcionais()
@@ -157,11 +157,11 @@ class SyntaxAnalyzer():
                 sys.exit("Comando 'end' não encontrado")
         else:
             return False
-    
+
     def comandos_opcionais(self):
         if self.lista_de_comandos():
             pass
-    
+
     def lista_de_comandos(self):
         self.comando()
         self.lista_de_comandos_ln()
@@ -171,14 +171,14 @@ class SyntaxAnalyzer():
             self.lista_de_comandos_ln()
         else:
             self.index -= 1
-    
+
     def comando(self):
         if self.variavel():
             if self.next().word == ":=":
                 self.expressao()
             else:
                 sys.exit("O ':=' era esperado")
-        
+
         if self.ativacao_de_procedimento():
             pass
 
@@ -196,7 +196,7 @@ class SyntaxAnalyzer():
         else:
             self.index -= 1
             return
-        
+
         if self.next().word == "while":
             self.expressao()
             if self.next().word == "do":
@@ -248,7 +248,7 @@ class SyntaxAnalyzer():
         self.expressao_simples()
         if self.op_relacional():
             self.expressao_simples()
-    
+
     def expressao_simples(self):
         if self.termo():
             self.expressao_simples_ln()
@@ -257,24 +257,24 @@ class SyntaxAnalyzer():
             self.expressao_simples_ln()
         else:
             sys.exit("Uma expressão era esperada")
-    
+
     def expressao_simples_ln(self):
         if self.op_aditivo():
             self.termo()
             self.expressao_simples_ln()
-    
+
     def termo(self):
         if self.fator():
             self.termo_ln()
             return True
         else:
             sys.exit("Era esperado um fator")
-    
+
     def termo_ln(self):
         if self.op_multiplicativo():
             self.fator()
             self.termo_ln()
-    
+
     def fator(self):
         token = self.next()
         if token.lex == "Identificador":
@@ -300,31 +300,35 @@ class SyntaxAnalyzer():
             self.fator()
         else:
             return False
-        
+
         return True
-    
+
     def sinal(self):
         if self.next().word in "+-":
             return True
         else:
+            self.index -= 1
             return False
-    
+
     def op_relacional(self):
         if self.next().word in ["=","<",">","<=",">=","<>"]:
             return True
         else:
+            self.index -= 1
             return False
 
     def op_aditivo(self):
         if self.next().word in ["+","-","or"]:
             return True
         else:
+            self.index -= 1
             return False
-    
+
     def op_multiplicativo(self):
         if self.next().word in ["*","/","and"]:
             return True
         else:
+            self.index -= 1
             return False
 
 ############################
