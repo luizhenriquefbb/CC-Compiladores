@@ -14,8 +14,8 @@ class SyntaxAnalyzer():
     def next(self):
         if self.index < len(self.list_tokens):
             self.current = self.list_tokens[self.index]
-            self.index += 1
             print (self.current)
+            self.index += 1
             return self.current
 
         sys.exit("Erro: O programa terminou, mas a análise não")
@@ -64,7 +64,6 @@ class SyntaxAnalyzer():
                 self.tipo()
                 if self.next().word == ";":
                     self.lista_declaracoes_variaveis_ln()
-                    return
                 else:
                     sys.exit("O ';' não enontrado")
             else:
@@ -88,8 +87,7 @@ class SyntaxAnalyzer():
             self.index -= 1
 
     def tipo(self):
-        token = self.next().word
-        if token in ["integer","real","boolean"]:
+        if self.next().word in ["integer","real","boolean"]:
             pass
         else:
             sys.exit("Não é um tipo")
@@ -101,7 +99,6 @@ class SyntaxAnalyzer():
         if self.declaracao_subprograma():
             if self.next().word == ";":
                 self.declaracoes_subprogramas_ln()
-                pass
             else:
                 sys.exit("Declaração de subprograma sem ';'")
 
@@ -143,8 +140,11 @@ class SyntaxAnalyzer():
     def lista_de_parametros_ln(self):
         if self.next().word == ";":
             self.lista_de_identificadores()
-            self.tipo()
-            self.lista_de_parametros_ln()
+            if self.next().word == ":":
+                self.tipo()
+                self.lista_de_parametros_ln()
+            else:
+                sys.exit("Era esparado ':'")
         else:
             self.index -= 1
 
@@ -156,11 +156,11 @@ class SyntaxAnalyzer():
             else:
                 sys.exit("Comando 'end' não encontrado")
         else:
+            self.index -= 1
             return False
 
     def comandos_opcionais(self):
-        if self.lista_de_comandos():
-            pass
+        self.lista_de_comandos()
 
     def lista_de_comandos(self):
         self.comando()
@@ -168,6 +168,7 @@ class SyntaxAnalyzer():
 
     def lista_de_comandos_ln(self):
         if self.next().word == ";":
+            self.comando()
             self.lista_de_comandos_ln()
         else:
             self.index -= 1
@@ -176,16 +177,17 @@ class SyntaxAnalyzer():
         if self.variavel():
             if self.next().word == ":=":
                 self.expressao()
+                return
             else:
                 sys.exit("O ':=' era esperado")
 
-        if self.ativacao_de_procedimento():
+        elif self.ativacao_de_procedimento():
             pass
 
-        if self.comando_composto():
+        elif self.comando_composto():
             pass
 
-        if self.next().word == "if":
+        elif self.next().word == "if":
             self.expressao()
             if self.next().word == "then":
                 self.comando()
@@ -195,7 +197,6 @@ class SyntaxAnalyzer():
                 sys.exit("O 'then' era eperado")
         else:
             self.index -= 1
-            return
 
         if self.next().word == "while":
             self.expressao()
@@ -204,7 +205,7 @@ class SyntaxAnalyzer():
             else:
                 sys.exit("Era esperado um 'do'")
         else:
-            sys.exit("O comando não foi encontrado")
+            self.index -= 1
 
     def parte_else(self):
         if self.next().word == "else":
@@ -216,6 +217,7 @@ class SyntaxAnalyzer():
         if self.next().lex == "Identificador":
             return True
         else:
+            self.index -= 1
             return False
 
     def ativacao_de_procedimento(self):
@@ -286,6 +288,7 @@ class SyntaxAnalyzer():
                     sys.exit("Era esperado um ')'")
             else:
                 self.index -= 1
+                return True
         elif token.lex in ["Número Inteiro","Número Real"]:
             pass
         elif token.word in ["true","false"]:
@@ -299,6 +302,7 @@ class SyntaxAnalyzer():
         elif token.word == "not":
             self.fator()
         else:
+            self.index -= 1
             return False
 
         return True

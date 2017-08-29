@@ -4,6 +4,6 @@ var
 	valor2: real;
 begin
 	valor1 := 10;
-	valor2 = valor1 + 5;
-	valor = 5 + 2;
+	valor2 := valor1 + 5;
+	valor := 1 + 5;
 end.
