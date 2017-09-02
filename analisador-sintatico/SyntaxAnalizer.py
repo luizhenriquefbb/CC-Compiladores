@@ -122,7 +122,7 @@ class SyntaxAnalyzer():
     def argumentos(self):
         if self.next().word == "(":
             self.lista_de_parametros()
-            if self.next.word() == ")":
+            if self.next().word == ")":
                 pass
             else:
                 sys.exit("Era esperado um ')'")
@@ -342,4 +342,4 @@ if __name__ == "__main__":
         lex = LexicalAnalyzer.LexicalAnalyzer()
         syn = SyntaxAnalyzer(lex.analyze(program.read()))
         if (syn.startAnalysis()):
-            print("DEU BOM")
+            print("PROGRAMA OK!")

@@ -139,7 +139,7 @@ class LexicalAnalyzer:
                 lex = "Operador Multiplicativo"
             ######################## MODIFICAÇÃO ########################
             elif program[i] is "/":
-                toke = program[i]
+                token = program[i]
                 i+=1
                 lex = "Operador Multiplicativo"
 
