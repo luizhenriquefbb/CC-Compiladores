@@ -270,7 +270,8 @@ class SyntaxAnalyzer():
             self.termo_ln()
             return True
         else:
-            sys.exit("Era esperado um fator")
+            #sys.exit("Era esperado um fator")
+            return False
 
     def termo_ln(self):
         if self.op_multiplicativo():
