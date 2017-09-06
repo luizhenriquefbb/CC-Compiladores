@@ -166,6 +166,7 @@ class SyntaxAnalyzer():
         self.comando()
         self.lista_de_comandos_ln()
 
+
     def lista_de_comandos_ln(self):
         if self.next().word == ";":
             self.comando()

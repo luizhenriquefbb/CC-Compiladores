@@ -22,7 +22,7 @@ class LexicalAnalyzer:
         lex = ""
         result = []
 
-        while i < tam-1:
+        while i <= tam-1:
 
             if program[i].isdigit():    #Se o elemento é um número
                 token += program[i]
