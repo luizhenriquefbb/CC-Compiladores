@@ -91,7 +91,7 @@ comando →
         | comando_composto
         | if expressão then comando parte_else
         | while expressão do comando
-
+>>>>>>> | do comando while (expressão)
 
 parte_else →
         else comando

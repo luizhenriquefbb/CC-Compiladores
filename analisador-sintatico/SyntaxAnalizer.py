@@ -207,6 +207,26 @@ class SyntaxAnalyzer():
                 sys.exit("Era esperado um 'do'")
         else:
             self.index -= 1
+        #>>>>>>>>>>>>>>>>>> Add Do-while <<<<<<<<<<<<<<<<<<
+        if self.next().word == "do":
+            self.comando()
+            if self.next().word == ";":
+                if self.next().word == "while":
+                    if self.next().word == "(":
+                        self.expressao()
+                        if self.next().word == ")":
+                            pass
+                        else:
+                            sys.exit("Era esperado um ')' no final")
+                    else:
+                        sys.exit("Era esperado um '(' depois do 'while'")
+                else:
+                    sys.exit("Era esperado um 'while'")
+            else:
+                sys.exit("Falta finalizar com ';'")
+        else:
+            self.index -= 1
+        #>>>>>>>>>>>>>>>>>> Add Do-while <<<<<<<<<<<<<<<<<<
 
     def parte_else(self):
         if self.next().word == "else":
