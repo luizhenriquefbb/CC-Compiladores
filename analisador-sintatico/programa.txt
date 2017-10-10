@@ -1,7 +1,10 @@
 program teste; {programa exemplo}
 var
-	valor1: integer;
+	valor, valor1: integer;
 	valor2: real;
+	valor3: real;
+	x : integer;
+	y : integer;
 
 procedure calcula_percentual (n1:real; per1:real); 
 begin 
@@ -17,15 +20,13 @@ begin
 	
 	valor1 := 10;
 	valor2 := valor1 + 5;
-	valor := 1 + 5;
-	NUMERO := 3 + 5 + 7 - 9;
 
 	if 3 > 4 then
 	begin
-	valor := 30;
+	valor := -30 / teste;
 	end;
 
-	if 3 > 4 then
+	if false and true then
 	begin
 		valor := 30;
 	end
@@ -38,12 +39,5 @@ begin
 	begin
 		valor3 := 4 + 3;
 	end;
-
-	do
-	begin
-		y := x + y;
-		x := 1;
-	end
-	while (x < 0)
 end.
 

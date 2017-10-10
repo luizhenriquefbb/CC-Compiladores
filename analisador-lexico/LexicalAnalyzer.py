@@ -87,6 +87,8 @@ class LexicalAnalyzer:
                     lex = "Operador Aditivo"
                 elif token is "and":    #Verificar se é o Operador "and"
                     lex = "Operador Multiplicativo"
+                elif token in ["true","false"]:
+                    lex = "Valor Lógico"
                 else:                   #Caso tudo contrário ele é um Identificador
                     lex = "Identificador"
 
