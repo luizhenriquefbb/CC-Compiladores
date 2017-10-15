@@ -1,3 +1,3 @@
 from analisadorSintaticoSemantico.symbolsTable import SymbolsTable
 from analisadorSintaticoSemantico.typesStack import TypesStack
-from analisadorSintaticoSemantico.SyntaxAnalyzer import SyntaxAnalyzer
+from analisadorSintaticoSemantico.SyntaxSemanticAnalyzer import SyntaxSemanticAnalyzer

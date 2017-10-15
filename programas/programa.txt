@@ -1,6 +1,7 @@
 program teste; {programa exemplo}
 var
-	valor, valor1: integer;
+	valor: integer;
+	valor1: integer;
 	valor2: real;
 	valor3: real;
 	x : integer;
@@ -21,12 +22,14 @@ begin
 	valor1 := 10;
 	valor2 := valor1 + 5;
 
+	calcula_2 (valor1, valor2);
+
 	if 3 > 4 then
 	begin
-	valor := -30 / teste;
+	valor2 := 30;
 	end;
 
-	if false and true then
+	if 3 > 4 then
 	begin
 		valor := 30;
 	end

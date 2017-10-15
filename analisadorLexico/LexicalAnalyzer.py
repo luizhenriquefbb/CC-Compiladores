@@ -1,10 +1,15 @@
+#!/usr/bin/python3
+'''
+Auth: Vinícius Matheus
+Github: github.com/Vnicius
+'''
 import sys
 
 class Token:
     def __init__(self, word, lex, line):
-        self.word = word
-        self.lex = lex
-        self.line = line
+        self.word = word    #texto do token
+        self.lex = lex      #classificação léxica
+        self.line = line    #linha
 
     def __str__(self):
         return self.word+"\t"+self.lex+"\t"+str(self.line)
