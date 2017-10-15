@@ -12,9 +12,11 @@ class Token:
 
 class LexicalAnalyzer:
     def __init__(self):
-        self.key_words = ["program", "var", "integer", "real", "boolean", "procedure", "begin","end", "if", "then", "else", "while", "do", "not"]
+        self.key_words = ["program", "var", "integer", "real", "boolean"
+                          , "procedure", "begin","end", "if", "then"
+                          , "else", "while", "do", "not"]
 
-    def analyze(self,program,i=0):
+    def analyze(self, program, i=0):
         line_count = 1
         token = ""
         tam = len(program)
@@ -43,18 +45,18 @@ class LexicalAnalyzer:
                             else:
                                 break
                         break
-                    ######################## MODIFICAÇÃO ########################
-                    elif program[i] == "i":
+                    ######################## MODIFICAÇÃO: Número Complexo ########################
+                    elif program[i] == "i": #verifica se começa com 'i'
                         token += program[i]
                         i += 1
-                        if program[i] in "+-":
+                        if program[i] in "+-":  #verifica o sinal
                             token += program[i]
                             i+=1
-                            if program[i].isdigit():
+                            if program[i].isdigit():    #procura os dígitos
                                 token += program[i]
                                 i+=1
                                 lex = "Número Complexo"
-                                while i < tam-1:
+                                while i < tam-1:    #procura os outros dígitos
                                     if program[i].isdigit():
                                         token += program[i]
                                         i+=1
@@ -87,7 +89,7 @@ class LexicalAnalyzer:
                     lex = "Operador Aditivo"
                 elif token is "and":    #Verificar se é o Operador "and"
                     lex = "Operador Multiplicativo"
-                elif token in ["true","false"]:
+                elif token in ["true","false"]:     #verifica se é 'true' ou 'false'
                     lex = "Valor Lógico"
                 else:                   #Caso tudo contrário ele é um Identificador
                     lex = "Identificador"
@@ -139,15 +141,15 @@ class LexicalAnalyzer:
                 token = program[i]
                 i+=1
                 lex = "Operador Multiplicativo"
-            ######################## MODIFICAÇÃO ########################
-            elif program[i] is "/":
+            ######################## MODIFICAÇÃO: Comentário em Linha ########################
+            elif program[i] is "/":     #verifica se é '/'
                 token = program[i]
                 i+=1
                 lex = "Operador Multiplicativo"
 
-                if program[i] is "/":
+                if program[i] is "/":   #verifica segunda '/'
                     i+=1
-                    while i < tam-1:
+                    while i < tam-1:    #ignora os caracters até a quebra de linha
                         if program[i] is "\n":
                             i+=1
                             line_count += 1
@@ -187,8 +189,7 @@ class LexicalAnalyzer:
             else:   #Caso seja um character não aceito pela linguagem
                 sys.exit("ERRO Léxico: Token '"+program[i]+"' não aceito. Linha: "+str(line_count))
                 break
-
-            #result.append([token,lex,line_count])
+            
             result.append(Token(token,lex,line_count))
             token = ""
 

@@ -1,20 +1,20 @@
 
 import sys,os
 
-sys.path.append("/".join(os.getcwd().split("/")[:-1])+"/analisador-lexico")
+#sys.path.append("/".join(os.getcwd().split("/")[:-1])+"/analisador-lexico")
 
-import LexicalAnalyzer
-import symbolsTable
-import typesStack
+#import LexicalAnalyzer
+from analisadorSintaticoSemantico import SymbolsTable
+from analisadorSintaticoSemantico import TypesStack
 
 class SyntaxAnalyzer():
     def __init__(self, list_tokens):
         self.list_tokens = list_tokens
         self.current =  None
         self.index = 0
-        self.tabela = symbolsTable.SymbolsTable()
+        self.tabela = SymbolsTable()
         self.cont_begin_end = 0
-        self.pilha_tipos = typesStack.TypesStack()
+        self.pilha_tipos = TypesStack()
 
     def next(self):
         if self.index < len(self.list_tokens):
