@@ -1,16 +1,25 @@
 #!/usr/bin/python3
-
+'''
+Auth: Vinícius Matheus
+Github: github.com/Vnicius
+'''
 import sys
 
 class Symbol:
+    '''
+    Símbolo.
+    '''
     def __init__(self, simbolo, tipo):
-        self.simbolo = simbolo  #a palavra do simbolo
+        self.simbolo = simbolo  #o simbolo
         self.tipo = tipo    #tipo do símbolo
 
     def __repr__(self):
         return "("+str(self.simbolo) +", "+self.tipo+")"
 
 class SymbolsTable:
+    '''
+    Tabela de símbolos.
+    '''
     def __init__(self):
         self.marca = "$"    #marca de separação de escopos
         self.tabela = []    #tabela de símbolos
@@ -20,13 +29,13 @@ class SymbolsTable:
         Cria novo escopo
         '''
         self.tabela.append(self.marca)
-    
+
     def simbolo_no_escopo(self, simbolo):
         '''
         Verifica se um símbolo existe no escopo atual
         '''
-        invert_tabela = self.tabela[::-1]
-        index_marca = invert_tabela.index(self.marca)  #índice da última ocorrência da marca
+        invert_tabela = self.tabela[::-1]   #inverte a tabela
+        index_marca = invert_tabela.index(self.marca)  #pegar o índice da primeira ocorrência da marca
 
         for s in invert_tabela[:index_marca]:   #procura o símbolo no escopo atual
             if s.simbolo == simbolo:
@@ -36,9 +45,9 @@ class SymbolsTable:
 
     def push_simbolo(self, simbolo, tipo):
         '''
-        Coloca um novo síbolo na tabela de símbolo
+        Coloca um novo símbolo na tabela de símbolo
         '''
-        if not self.simbolo_no_escopo(simbolo): #se o síbolo nãp existe no escopo
+        if not self.simbolo_no_escopo(simbolo): #se o símbolo nãp existe no escopo
             self.tabela.append(Symbol(simbolo, tipo))   #adiciona o novo símbolo
             #print(self.tabela)
         else:
@@ -52,8 +61,8 @@ class SymbolsTable:
             self.tabela = []
             return
 
-        invert_tabela = self.tabela[::-1]   #inverte a tabela
-        index_marca = invert_tabela.index(self.marca)   #procura a última aparição da marca
+        invert_tabela = self.tabela[::-1]   #inverter a tabela
+        index_marca = invert_tabela.index(self.marca)   #procurar a primeira aparição da marca
         invert_tabela = invert_tabela[index_marca + 1:] #pegar todos os valores a partir da última ocorrência da marca
 
         self.tabela = invert_tabela[::-1]   #inverte a tabela novamente

@@ -1,5 +1,8 @@
 #!/usr/bin/python3
-
+'''
+Auth: Vinícius Matheus
+Github: github.com/Vnicius
+'''
 import sys
 
 from analisadorLexico import LexicalAnalyzer

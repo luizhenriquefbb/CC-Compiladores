@@ -1,11 +1,7 @@
 program teste; {programa exemplo}
 var
-	8valor1: integer;
-	valor2: real; or < <> <=
+	valor1: integer;
+	valor2: real;
 begin
 	valor1 := 10;
 end.
-5.a
-.59<:{{{}
-
-}}

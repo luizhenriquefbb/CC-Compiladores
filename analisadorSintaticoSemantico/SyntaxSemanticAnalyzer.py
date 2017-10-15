@@ -13,7 +13,7 @@ class SyntaxSemanticAnalyzer():
     def __init__(self, list_tokens):
         self.list_tokens = list_tokens  #lista de tokens
         self.current =  None    #token atual
-        self.index = 0      #indíce do token atual
+        self.index = 0      #índice do token atual
         self.tabela = SymbolsTable()    #tabela de símbolos
         self.cont_begin_end = 0     #contador de begin e end
         self.pilha_tipos = TypesStack()     #pilha de tipos
@@ -32,6 +32,9 @@ class SyntaxSemanticAnalyzer():
         return None
 
     def regride_token(self):
+        '''
+        Regride 1 no índice da lista de tokens.
+        '''
         self.index -= 1
 
     def push_id(self, token, type):
@@ -69,10 +72,10 @@ class SyntaxSemanticAnalyzer():
         '''
         Verifica se o topo da pilha de tipos é booleano
         '''
-        if self.pilha_tipos.topo() != "boolean":    #[SMT] verifica se o resultado da expressão é booleano
-            sys.exit("Era esperado um valor booleano. Linha: " + str(self.current.line))
-        else:
+        if self.pilha_tipos.topo() == "boolean":    #[SMT] verifica se o resultado da expressão é booleano
             self.pilha_tipos.pop()  #[SMT] se for boolean, esvazia a pilha
+        else:
+            sys.exit("Era esperado um valor booleano. Linha: " + str(self.current.line))
 
     def verficar_operacao(self, operador):
         '''
@@ -98,7 +101,7 @@ class SyntaxSemanticAnalyzer():
             self.tabela.novo_escopo()   #[SMT] inicia um novo escopo na tabela
 
             if self.next().lex == "Identificador":  #verifica se o nome do programa foi declarado
-                self.tabela.push_simbolo(self.current.word, "program")  #coloca o identifica do nome do programa na tabela
+                self.tabela.push_simbolo(self.current.word, "program")  #coloca o identificador do nome do programa na tabela
 
                 if self.next().word == ";":     #fim do cabeçalho do programa
                     self.declaracoes_variaveis()    #procedimento de declaração de variáries
@@ -248,7 +251,7 @@ class SyntaxSemanticAnalyzer():
         if self.next().word == "procedure":     #verifica se começa com 'procedure'
             if self.next().lex == "Identificador":  #verifica o nome do subprograma
 
-                self.tabela.push_simbolo(self.current.word,"procedure") #[SMT] acrescente o identificador do nome na tabela com o tipo 'procedure'
+                self.tabela.push_simbolo(self.current.word,"procedure") #[SMT] acrescenta o identificador do nome na tabela com o tipo 'procedure'
                 self.tabela.novo_escopo()   #[SMT] inicia um novo escopo na tabela
 
                 self.argumentos()   #verifica a lista de argumentos do subprograma
@@ -362,7 +365,7 @@ class SyntaxSemanticAnalyzer():
             | ε
         '''
         if self.next().word == ";": #verifica o fim do comando anterior
-            self.comando()  #verifica so comandos
+            self.comando()  #verifica os comandos
             self.lista_de_comandos_ln() #procedimento para a lista de comandos
 
         else:
@@ -639,17 +642,17 @@ class SyntaxSemanticAnalyzer():
         elif token.lex == "Número Real":    #verifica se é um número real
             self.pilha_tipos.push("real")
 
-        elif token.word in ["true","false"]:    ##verifica se é um vaor booleano
+        elif token.word in ["true","false"]:    #verifica se é um valor booleano
             self.pilha_tipos.push("boolean")
 
         elif token.word == "(":
-            self.expressao()    #procedimento para verifica a expressão
+            self.expressao()
 
             if self.next().word != ")":
                 sys.exit("Falta o ')'")
 
         elif token.word == "not":
-            self.fator()    #procedimento para verificar o fator
+            self.fator()
 
         else:
             self.regride_token()

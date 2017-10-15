@@ -6,7 +6,7 @@ begin  {tente gerar um erro usando um caracter nao permitido.. tipo &}
    NUMERO := 3 / 5 + 7 - 9;
    if (NUMERO >= 20) or (NUMERO <= 90) then
    begin
-      NUMERO := -10 / -3;
+      NUMERO := -10 / (-3);
     end;
    final := NUMERO + 1;
 end.
