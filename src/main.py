@@ -4,6 +4,10 @@ from util import *
 
 def main(input_string):
 
+    input_string+=' '
+    
+
+    # List of key words
     # lista de palavras chaves
     reserved_words = build_list_of_reserved_words()
     ignored_words = build_list_of_ignored()
@@ -12,12 +16,15 @@ def main(input_string):
     attributers = build_list_of_attributers()
     delimiters = build_list_of_delimiters()
 
+    # line counter
     # Contador de linhas
     number_of_lines = 1
 
+    # true when inside of a comment
     # verifica se o comentario esta aberto
     comment_is_open = False
 
+    # string index
     # index da string que vai sendo incrementada
     current_index = 0
 
@@ -31,7 +38,7 @@ def main(input_string):
     integer_reg = re.compile(r"[0-9]+$")
     
     # expressao regular para detectar se uma palavra pode ser um float
-    float_reg = re.compile(r"[0-9]+[\.][0-9]*$")
+    float_reg = re.compile(r"[0-9]+[\.]{0,1}[0-9]*$")
     # float_reg = re.compile(r"[0-9]+\.[0-9]*$")
 
 
@@ -47,7 +54,7 @@ def main(input_string):
         "Atribuidor\t",
         "Delimitador\t",
         "Inteiro\t\t",
-        "Float\t",
+        "Float\t\t",
         "Variavel\t"
     ]
 
@@ -125,6 +132,10 @@ def main(input_string):
                         current_possibilities.remove("Delimitador\t")
                     except ValueError:
                         pass
+                
+                # remove variable possibility
+                if not variable_reg.match(word) and "Variavel\t" in current_possibilities:
+                    current_possibilities.remove("Variavel\t")
 
                 # Float
                 if float_reg.match(word):
@@ -135,14 +146,14 @@ def main(input_string):
                         word+=input_string[current_index]
                     
                     # remove o caractere que quebrou pra nao imprimir-lo
-                    current_index-=2
+                    current_index-=1
                     word = word[:-1]
-                    current_possibilities = ["Float\t"]
+                    current_possibilities = ["Float\t\t"]
 
 
                 else:
                     try:
-                        current_possibilities.remove("Float\t")
+                        current_possibilities.remove("Float\t\t")
                     except ValueError:
                         pass
                
@@ -167,6 +178,8 @@ def main(input_string):
                         pass
 
 
+                # Special cases:
+
 
                 # if word is a key word, desconsider word be a variable
                 if len(current_possibilities) == 2 and "Variavel\t" in current_possibilities:
@@ -189,17 +202,22 @@ def main(input_string):
                     current_index-=2
                     word = word[:-1]
                     current_possibilities = ["Variavel\t"]
-                    
+
+                # :
+                if ':' == word and current_index < len(input_string) and '=' is not input_string[current_index+1]:
+                    current_possibilities = ["Delimitador\t"]
+
             else:
                 break
             
             current_index += 1
+        # end len(current_possibilities) > 1
 
 
 
         # Error!!
         if len(current_possibilities) == 0:
-            print_row(word, "erro", number_of_lines)
+            print_row(word, "erro\t", number_of_lines)
 
         # found !!
         if len(current_possibilities) == 1:
@@ -209,7 +227,11 @@ def main(input_string):
         word = ''
         current_possibilities = list_of_classifications[:]
         current_index += 1
+    
+    # End read all chars
 
+    if comment_is_open:
+        print "erro!!: comentario nao fechado"
 
 """
     This function receive a word and a list. Its checks if the word can be in list.
@@ -225,6 +247,12 @@ def main(input_string):
 
  """
 def can_be_substring_of(word, a_list):
+    
+    # Casos que interferem no regex
+    word = word.replace("*", "\\*")
+    word = word.replace("+", "\\+")
+    word = word.replace(".", "\\.")
+
     matches = []
     for element in a_list:
         pattern = re.compile(word+".*")
@@ -238,7 +266,14 @@ def can_be_substring_of(word, a_list):
 
 if __name__ == '__main__':
     # input_string = 'if \n43teste var \n uo{qweh 322}23 j23jn234 program'
-    input_string = "program teste; {programa exemplo}\nvar\nvalor1: integer;\nvalor2: real;\nbegin\nvalor1 := 10;\nend.\n"
+    input_string = ("program teste; {programa exemplo}\n"+
+        "var\n"+
+        "valor1: integer;\n"+
+        "valor2: real;\n"+
+        "begin\n"+
+        "valor1 := 10 *;\n"+
+        "end.\n"+
+        "90 89.7 12   & = #")
     print_row("TOKEN", "CLASSIFICACAO", "LINHA")
     main(input_string)
     

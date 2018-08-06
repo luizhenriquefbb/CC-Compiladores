@@ -38,9 +38,11 @@ def build_list_of_relationals():
 def build_list_of_operators():
     return [
         "+",
+        "\+",
         "-",
         "or",
         "*",
+        "\*",
         "/",
         "and"
     ]
@@ -53,6 +55,7 @@ def build_list_of_attributers():
 def build_list_of_delimiters():
     return [
         ".",
+        "\.",
         ",",
         ":",
         ";"
