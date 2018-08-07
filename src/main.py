@@ -166,7 +166,7 @@ def main(input_string):
                         word+=input_string[current_index]
                     
                     # remove o caractere que quebrou pra nao imprimir-lo
-                    current_index-=2
+                    current_index-=1
                     word = word[:-1]
                     current_possibilities = ["Inteiro\t\t"]
 
@@ -199,7 +199,7 @@ def main(input_string):
                     while variable_reg.match(word) and current_index < len(input_string):
                         current_index+=1
                         word+=input_string[current_index]
-                    current_index-=2
+                    current_index-=1
                     word = word[:-1]
                     current_possibilities = ["Variavel\t"]
 
@@ -209,15 +209,16 @@ def main(input_string):
 
             else:
                 break
-            
-            current_index += 1
+                
+            if len(current_possibilities) > 1:
+                current_index += 1
         # end len(current_possibilities) > 1
 
 
 
         # Error!!
         if len(current_possibilities) == 0:
-            print_row(word, "erro\t", number_of_lines)
+            print_row(word, "erro\t\t", number_of_lines)
 
         # found !!
         if len(current_possibilities) == 1:
