@@ -179,29 +179,54 @@ def main(input_string):
 
 
                 # Special cases:
-
-
-                # if word is a key word, desconsider word be a variable
-                if len(current_possibilities) == 2 and "Variavel\t" in current_possibilities:
-                    # word match exactly with a key word
-                    if word in (reserved_words+
-                                    ignored_words+
-                                    relationals+
-                                    operators+
-                                    attributers+
-                                    delimiters):
-                         current_possibilities.remove("Variavel\t")
-
-
-                # do not break string until does not match with variable
+                 # do not break string until does not match with variable
                 # se so pode ser uma variavel, continuar concatenando caracteres ate nao puder ser mais uma variavel
-                if len(current_possibilities) == 1 and "Variavel\t" in current_possibilities:
+                if "Variavel\t" in current_possibilities:
                     while variable_reg.match(word) and current_index < len(input_string):
                         current_index+=1
-                        word+=input_string[current_index]
+                        # tratamento com \n. Evitar colocar \n em word
+                        if current_index < len(input_string) and input_string[current_index] <> '\n':
+                            word+=input_string[current_index]
+                        else:
+                            break
+
+                    # remove o caractere que quebrou a E.R
+                    if current_index < len(input_string) and input_string[current_index] <> '\n':
+                        word = word[:-1]
+                    else:
+                       pass
+
                     current_index-=1
-                    word = word[:-1]
+                    
+
                     current_possibilities = ["Variavel\t"]
+
+                # if word is a key word, desconsider word be a variable
+                if "Variavel\t" in current_possibilities:
+                    # word match exactly with a key word
+                        # Deprecated: 
+                        # if word in (reserved_words+
+                        #                 ignored_words+
+                        #                 relationals+
+                        #                 operators+
+                        #                 attributers+
+                        #                 delimiters):
+                        #     current_possibilities.remove("Variavel\t")
+                        
+                    if word in reserved_words:
+                        current_possibilities = ["Palavras reservadas"]
+                    if word in ignored_words:
+                        current_possibilities = ["Ser ignorada"]
+                    if word in relationals:
+                        current_possibilities = ["Relacional\t"]
+                    if word in operators:
+                        current_possibilities = ["Operador\t"]
+                    if word in attributers:
+                        current_possibilities = ["Atribuidor\t"]
+                    if word in delimiters:
+                        current_possibilities = ["Delimitador\t"]
+
+
 
                 # :
                 if ':' == word and current_index < len(input_string) and '=' is not input_string[current_index+1]:
@@ -274,7 +299,8 @@ if __name__ == '__main__':
         "begin\n"+
         "valor1 := 10 *;\n"+
         "end.\n"+
-        "90 89.7 12   & = #")
+        "90 89.7 12   & = #\n"+
+        "variavel var1")
     print_row("TOKEN", "CLASSIFICACAO", "LINHA")
     main(input_string)
     
