@@ -23,6 +23,7 @@ def main(input_string):
     # true when inside of a comment
     # verifica se o comentario esta aberto
     comment_is_open = False
+    line_comment = False
 
     # string index
     # index da string que vai sendo incrementada
@@ -42,8 +43,6 @@ def main(input_string):
     # float_reg = re.compile(r"[0-9]+\.[0-9]*$")
 
 
-
-
     # lista de possibilidades que uma palavra pode ter.
     # A medida que a PALAVRA (word) vai sendo formada, os itens da lista vai sendo removido
     list_of_classifications = [
@@ -55,7 +54,8 @@ def main(input_string):
         "Delimitador\t",
         "Inteiro\t\t",
         "Float\t\t",
-        "Variavel\t"
+        "Variavel\t",
+        "Numero 3D"
     ]
 
 
@@ -74,12 +74,20 @@ def main(input_string):
                 if input_string[current_index] == '\n':
                     number_of_lines += 1
                     current_index += 1
+                    line_comment = False
                     continue
 
                 # palavras a serem ignoradas
                 elif input_string[current_index] in ignored_words:
                     current_index += 1
                     continue
+
+                # Comentario de linha
+                if input_string[current_index] == '/' and input_string[current_index+1] == '/':
+                    current_index += 2
+                    line_comment = True
+                    continue
+
 
                 # Comentario
                 if input_string[current_index] == '{' and not comment_is_open:
@@ -94,12 +102,65 @@ def main(input_string):
                     comment_is_open = False
                     continue
                 
-                if comment_is_open:
+                if comment_is_open or line_comment:
                     current_index += 1
                     continue
                 
                 # coloca o caractere na "palavra"
                 word+=input_string[current_index]
+
+
+                # numero 3d
+                
+                # ███╗   ██╗██╗   ██╗███╗   ███╗███████╗██████╗  ██████╗     ██████╗ ██████╗ 
+                # ████╗  ██║██║   ██║████╗ ████║██╔════╝██╔══██╗██╔═══██╗    ╚════██╗██╔══██╗
+                # ██╔██╗ ██║██║   ██║██╔████╔██║█████╗  ██████╔╝██║   ██║     █████╔╝██║  ██║
+                # ██║╚██╗██║██║   ██║██║╚██╔╝██║██╔══╝  ██╔══██╗██║   ██║     ╚═══██╗██║  ██║
+                # ██║ ╚████║╚██████╔╝██║ ╚═╝ ██║███████╗██║  ██║╚██████╔╝    ██████╔╝██████╔╝
+                # ╚═╝  ╚═══╝ ╚═════╝ ╚═╝     ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝     ╚═════╝ ╚═════╝ 
+                #                                                                            
+                if can_be_3d(word) and "Numero 3D" in current_possibilities:
+                    # concatena ate nao puder ser mais float
+                    while can_be_3d(word) and current_index < len(input_string):
+                        
+                        current_index+=1
+                        word+=input_string[current_index]
+                    
+                    # remove o caractere que quebrou pra nao imprimir-lo
+                    current_index-=1
+                    word = word[:-1]
+
+                    if can_be_3d_final(word):
+                        current_possibilities = ["Numero 3D"]
+                    else:
+                        try:
+                            current_possibilities = [
+                                "Palavras reservadas",
+                                "Ser ignorada",
+                                "Relacional\t",
+                                "Operador\t",
+                                "Atribuidor\t",
+                                "Delimitador\t",
+                                "Inteiro\t\t",
+                                "Float\t\t",
+                                "Variavel\t"
+                            ]
+
+                            current_index-=len(word)-1
+                            word = input_string[current_index]
+                        except ValueError:
+                            pass
+                
+
+                else:
+                    try:
+                        current_possibilities.remove("Numero 3D")
+                    except ValueError:
+                        pass
+
+
+
+
 
                 # verifica classe a classe
                 if not can_be_substring_of(word, reserved_words):
@@ -157,6 +218,7 @@ def main(input_string):
                     except ValueError:
                         pass
                
+               
                 # inteiro
                 if integer_reg.match(word):
                     # concatena ate nao puder ser mais int
@@ -204,14 +266,7 @@ def main(input_string):
                 # if word is a key word, desconsider word be a variable
                 if "Variavel\t" in current_possibilities:
                     # word match exactly with a key word
-                        # Deprecated: 
-                        # if word in (reserved_words+
-                        #                 ignored_words+
-                        #                 relationals+
-                        #                 operators+
-                        #                 attributers+
-                        #                 delimiters):
-                        #     current_possibilities.remove("Variavel\t")
+                        
                         
                     if word in reserved_words:
                         current_possibilities = ["Palavras reservadas"]
@@ -290,9 +345,50 @@ def can_be_substring_of(word, a_list):
     else:
         return False
 
+def can_be_3d(word):
+    '''
+    Condicao para continuar concatenando caracteres na string
+    '''
+    case1 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*$")
+    case2 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x$")
+    case3 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*$")
+    case4 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y$")
+    case5 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y[0-9]+[\.]{0,1}[0-9]*$")
+    case6 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y[0-9]+[\.]{0,1}[0-9]*z$")
+
+    if case1.match(word):
+        return True
+    if case2.match(word):
+        return True
+    if case3.match(word):
+        return True
+    if case4.match(word):
+        return True
+    if case5.match(word):
+        return True
+    if case6.match(word):
+        return True
+
+    return False
+
+
+def can_be_3d_final(word):
+
+    case6 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y[0-9]+[\.]{0,1}[0-9]*z$")
+
+    
+    if case6.match(word):
+        return True
+
+    return False
+
+
+
+
 if __name__ == '__main__':
     # input_string = 'if \n43teste var \n uo{qweh 322}23 j23jn234 program'
-    input_string = ("program teste; {programa exemplo}\n"+
+    input_string = (
+        "program teste; {programa exemplo}\n"+
         "var\n"+
         "valor1: integer;\n"+
         "valor2: real;\n"+
@@ -300,7 +396,12 @@ if __name__ == '__main__':
         "valor1 := 10 *;\n"+
         "end.\n"+
         "90 89.7 12   & = #\n"+
-        "variavel var1")
+        "variavel var1\n"+
+        "// isso eh um comentario de linha\n"+
+        "0.3x2.0y4.9"+
+        "12.34.56"+
+        "")
+
     print_row("TOKEN", "CLASSIFICACAO", "LINHA")
     main(input_string)
     
