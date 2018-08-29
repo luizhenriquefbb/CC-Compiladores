@@ -66,11 +66,11 @@ LISTA_DE_COMANDOS →
 
 
 COMANDO →
-	variável := expressão
+	VARIÁVEL := EXPRESSÃO
 	| ATIVAÇÃO_DE_PROCEDIMENTO
 	| COMANDO_COMPOSTO
-	| if expressão then COMANDO PARTE_ELSE
-	| while expressão do COMANDO
+	| if EXPRESSÃO then COMANDO PARTE_ELSE
+	| while EXPRESSÃO do COMANDO
 
 
 PARTE_ELSE →
@@ -78,7 +78,7 @@ PARTE_ELSE →
 	| ε
 
 
-variável →
+VARIÁVEL →
 	id
 
 
@@ -88,20 +88,18 @@ ATIVAÇÃO_DE_PROCEDIMENTO →
 
 
 LISTA_DE_EXPRESSÕES →
-	expressão
-	| LISTA_DE_EXPRESSÕES, expressão
+	EXPRESSÃO
+	| LISTA_DE_EXPRESSÕES, EXPRESSÃO
 
 
-expressão →
+EXPRESSÃO →
 	EXPRESSÃO_SIMPLES
 	| EXPRESSÃO_SIMPLES OP_RELACIONAL EXPRESSÃO_SIMPLES
 
 
 EXPRESSÃO_SIMPLES →
 	TERMO
-	| 
-
-	SINAL TERMO
+	| SINAL TERMO
 	| EXPRESSÃO_SIMPLES OP_ADITIVO TERMO
 
 
@@ -117,7 +115,7 @@ FATOR →
 	| NUM_REAL
 	| true
 	| false
-	| (expressão)
+	| (EXPRESSÃO)
 	| not FATOR
 
 

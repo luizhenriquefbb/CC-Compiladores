@@ -1,3 +1,5 @@
+tokens = []
+
 def build_list_of_reserved_words():
     return [
         "token",
@@ -65,4 +67,8 @@ def print_row(token, classification, line):
     if token is not '':
         s = '\t\t'
         print s.join([token, classification, str(line)])
+
+def add_token(token, classification, line):
+    tokens.append({'token': token, 'classification':classification, 'line':line})
+    print_row(token, classification, line)
 

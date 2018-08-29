@@ -91,13 +91,13 @@ def main(input_string):
 
                 # Comentario
                 if input_string[current_index] == '{' and not comment_is_open:
-                    print_row('{', "comentario aberto", number_of_lines)
+                    add_token('{', "comentario aberto", number_of_lines)
                     current_index += 1
                     comment_is_open = True
                     continue
 
                 if input_string[current_index] == '}' and comment_is_open:
-                    print_row('}', "comentario fechado", number_of_lines)
+                    add_token('}', "comentario fechado", number_of_lines)
                     current_index += 1
                     comment_is_open = False
                     continue
@@ -298,11 +298,11 @@ def main(input_string):
 
         # Error!!
         if len(current_possibilities) == 0:
-            print_row(word, "erro\t\t", number_of_lines)
+            add_token(word, "erro\t\t", number_of_lines)
 
         # found !!
         if len(current_possibilities) == 1:
-            print_row(word, current_possibilities[0], number_of_lines)
+            add_token(word, current_possibilities[0], number_of_lines)
             
         # find next token
         word = ''
@@ -398,10 +398,10 @@ if __name__ == '__main__':
         "90 89.7 12   & = #\n"+
         "variavel var1\n"+
         "// isso eh um comentario de linha\n"+
-        "0.3x2.0y4.9"+
+        "0.3x2.0y4.9z"+
         "12.34.56"+
         "")
 
     print_row("TOKEN", "CLASSIFICACAO", "LINHA")
     main(input_string)
-    
+    print("the end")
