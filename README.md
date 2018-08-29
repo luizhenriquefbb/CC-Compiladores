@@ -28,3 +28,12 @@ numero 3D com o seguinte formato: real+x+real+y+real+z
 ```
 Comentario de linha com '//'
 ```
+
+## Analisador sintático
+
+A segunda parte do curso é pegar a saída do léxico e fazer uma análise sintática. O método a ser desenvolvido é o **top-down** utilizando uma análise **preditiva recursiva**
+
+[ver pdf](Sintatico.pdf)
+
+### Observação
+Antes de começar o desenvolvimento, a linguagem precisa ser tratada pra poder passar pelo algorítimo sem problemas maiores. A linguagem tratada pode ser encontrada [aqui](gramatica_corrigida.txt)
