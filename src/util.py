@@ -71,4 +71,3 @@ def print_row(token, classification, line):
 def add_token(token, classification, line):
     tokens.append({'token': token, 'classification':classification, 'line':line})
     print_row(token, classification, line)
-

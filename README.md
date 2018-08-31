@@ -4,7 +4,6 @@ Atividade I de Compiladores. Analizador lexico.
 ## Descrição da atividade
 ver [pdf](Lexico.pdf).
 
-
 ## Alteracoes para fazer em sala de aula:
 Em sala de aula temos que implementar as seguintes mudanças:
 
