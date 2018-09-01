@@ -494,3 +494,170 @@ def COMANDO():
     """
     tokens = []
     return True
+
+def OP_MULTIPLICATIVO():
+    """
+    OP_MULTIPLICATIVO :
+        *
+        | /
+        | and
+    """
+
+    global current_token
+
+    if current_token['token'] == '*' or current_token['token'] == '/' or current_token == 'and':
+        getSimbol()
+        return True
+    else:
+        print_error("'*', '/' or 'and'")
+        return False
+
+def OP_ADITIVO():
+    """
+    OP_ADITIVO :
+        +
+        | -
+        | or
+    """
+
+    global current_token
+    if current_token['token'] == '+' or current_token['token'] == '-' or current_token['token'] == 'or':
+        getSimbol()
+        return True
+    else:
+        print_error("'+', '-', or 'or'")
+        return False
+
+def OP_RELACIONAL():
+    """
+    OP_RELACIONAL :
+        =
+        | <
+        | >
+        | <=
+        | >=
+        | <>
+    """
+
+    global current_token
+    if current_token['token'] == '=' or current_token['token'] == '<' or current_token['token'] == '>' or current_token['token'] == '<=' or current_token['token'] == '>=' or current_token['token'] == '<>':
+        getSimbol()
+        return True
+    else:
+        print_error("'=', '<', '>', '<=', '>=' or '<>'")
+        return False
+
+def SINAL():
+    """
+    SINAL :
+        + 
+        | -
+    """
+
+    global current_token
+    if current_token['token'] == '+' or current_token['token'] == '-':
+        getSimbol()
+        return True
+    else:
+        print_error("'+' or '-'")
+        return False
+
+def FATOR():
+    """
+    FATOR :
+        id FATOR_DESAMBIGUIDADE
+        | NUM_INT
+        | NUM_REAL
+        | true
+        | false
+        | (EXPRESSÃO)
+        | not FATOR
+    """
+    global current_token
+
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+        if not FATOR_DESAMBIGUIDADE():
+            return False
+        else:
+            return True
+    else:
+
+        if current_token['classification'] == 'Inteiro\t\t':
+            getSimbol()
+            return True
+
+        if current_token['classification'] == 'Float\t\t':
+            getSimbol()
+            return True
+
+        if current_token['classification'] == 'true' or current_token['token'] == 'false':
+            getSimbol()
+            return True
+        
+        if current_token['token'] == '(':
+            getSimbol()
+            if not EXPRESSAO():
+                return False
+            
+            if current_token['token'] == ')':
+                getSimbol()
+                return True
+            else:
+                print_error(')')
+                return False
+                
+        if current_token ['token'] == 'not':
+            getSimbol()
+            if not FATOR():
+                return False
+    
+    # special case:
+    print_error("id or '('")
+    return False
+
+
+
+
+def FATOR_DESAMBIGUIDADE():
+    """
+    FATOR_DESAMBIGUIDADE
+        (LISTA_DE_EXPRESSÕES)
+        | e
+    """
+    
+    global current_token
+    if current_token['token'] == '(':
+        getSimbol()
+        if not LISTA_DE_EXPRESSOES():
+            return False
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+
+        else:
+            print_error(")")
+    else:
+        return True # vazio
+
+def LISTA_DE_EXPRESSOES():
+    """
+    LISTA_DE_EXPRESSÕES :
+	    EXPRESSÃO LISTA_DE_EXPRESSÕES_2
+    """
+
+    if not EXPRESSAO():
+        return False
+
+    if not LISTA_DE_EXPRESSOES_2():
+        return False
+
+    return True
+
+def LISTA_DE_EXPRESSÕES_2 ():
+    """
+    LISTA_DE_EXPRESSÕES_2
+        , EXPRESSÃO LISTA_DE_EXPRESSÕES_2
+        | ε
+    """
+    pass
