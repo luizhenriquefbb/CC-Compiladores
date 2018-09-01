@@ -91,13 +91,13 @@ def sintatico(input_string):
 
                 # Comentario
                 if input_string[current_index] == '{' and not comment_is_open:
-                    add_token('{', "comentario aberto", number_of_lines)
+                    # add_token('{', "comentario aberto", number_of_lines)
                     current_index += 1
                     comment_is_open = True
                     continue
 
                 if input_string[current_index] == '}' and comment_is_open:
-                    add_token('}', "comentario fechado", number_of_lines)
+                    # add_token('}', "comentario fechado", number_of_lines)
                     current_index += 1
                     comment_is_open = False
                     continue
@@ -334,6 +334,8 @@ def can_be_substring_of(word, a_list):
     word = word.replace("*", "\\*")
     word = word.replace("+", "\\+")
     word = word.replace(".", "\\.")
+    word = word.replace("(", "\\(")
+    word = word.replace(")", "\\)")
 
     matches = []
     for element in a_list:

@@ -23,6 +23,14 @@ def lexico ():
 
     return True
 
+def print_error(expected, line=None):
+    global current_token
+    
+    if line == None:
+        line = current_token['line']
+
+    print ("erro: expected: '"+ expected +"' at line " + str(line)+". Found '"+current_token['token']+"'")
+
 def getSimbol():
     global current_token
     current_token = tokens.pop(0)
@@ -56,23 +64,25 @@ def PROGRAMA():
                     return False
                 
                 if current_token['token'] == '.':
+                    getSimbol()
                     return True
 
                 else:
-                    print ("erro: expected: '.' at line " + str(current_token['line']))
+                    print_error('.')
                     return False
                 
                 
             else:
-                print ("erro: expected: ';' at line " + str(current_token['line']))
+                print_error(';')
                 return False
         else:
-            print ("erro: expected: 'id' at line " + str(current_token['line']))
+            print_error('id')
             return False
     else:
-        print ("erro: expected: 'program' at line " + str(current_token['line']))
+        print_error('program')
         return False
-                
+
+    # getSimbol()
     return True
 
 
@@ -89,7 +99,7 @@ def DECLARACOES_VARIAVEIS():
         if not LISTA_DECLARACOES_VARIAVEIS():
             return False
     else:
-        getSimbol() # vazio
+        return True # vazio
 
     return True
 
@@ -115,13 +125,14 @@ def LISTA_DECLARACOES_VARIAVEIS():
                 return False
         
         else:
-            print ("erro: expected: ';' at line " + str(current_token['line']))
+            print_error(';')
             return False
 
     else:
-        print ("erro: expected: ':' at line " + str(current_token['line']))
+        print_error(':')
         return False
-
+    
+    # getSimbol()
     return True
 
 def LISTA_DECLARACOES_VARIAVEIS_2():
@@ -135,7 +146,6 @@ def LISTA_DECLARACOES_VARIAVEIS_2():
     global current_token
 
     if not LISTA_DE_IDENTIFICADORES():
-        getSimbol()
         return True # vazio
     
     if current_token['token'] == ':':
@@ -149,14 +159,14 @@ def LISTA_DECLARACOES_VARIAVEIS_2():
                 return False
         
         else:
-            print ("erro: expected: ';' at line " + str(current_token['line']))
+            print_error(';')
             return False
 
     else:
-        print ("erro: expected: ':' at line " + str(current_token['line']))
+        print_error(':')
         return False
 
-
+    # getSimbol()
     return True
 
 
@@ -169,15 +179,15 @@ def LISTA_DE_IDENTIFICADORES():
 
     if current_token['classification'] == 'Id\t\t':
         getSimbol()
-        if not LISTA_DECLARACOES_VARIAVEIS_2():
+        if not LISTA_DE_IDENTIFICADORES_2():
             return False
 
 
     else:
-        print("error: expected 'id' at line "+ str(current_token['line']))
+        print_error('id')
         return False
 
-
+    # getSimbol()
     return True
 
 def LISTA_DE_IDENTIFICADORES_2():
@@ -190,16 +200,16 @@ def LISTA_DE_IDENTIFICADORES_2():
     if current_token['token'] == ',':
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
+            getSimbol()
             if not LISTA_DE_IDENTIFICADORES_2():
                 return False
         else:
-            print("error: expected 'id' at line "+ str(current_token['line']))
+            print_error('id')
             return False
     else:
-        getSimbol()
         return True # vazio
 
-    getSimbol()
+    # getSimbol()
     return True
 
 
@@ -212,12 +222,12 @@ def TIPO():
     """
     global current_token
 
-    if current_token['token'] == 'inteiro' or current_token['token'] == 'real' or current_token['token'] == 'boolean':
+    if current_token['token'] == 'integer' or current_token['token'] == 'real' or current_token['token'] == 'boolean':
         getSimbol()
         return True
 
     else:
-        print("Error: expected 'inteiro/real/boolean, at line "+ str(current_token['line']))
+        print_error("'inteiro/real/boolean")
         return False
 
 
@@ -233,7 +243,7 @@ def DECLARACOES_DE_SUBPROGRAMAS():
         return False
 
     else:
-        getSimbol()
+        # getSimbol()
         return True
 
 def DECLARACOES_DE_SUBPROGRAMAS_2():
@@ -246,7 +256,6 @@ def DECLARACOES_DE_SUBPROGRAMAS_2():
     global current_token
 
     if not DECLARACAO_DE_SUBPROGRAMA():
-        getSimbol()
         return True # vazio
 
     else:
@@ -258,9 +267,10 @@ def DECLARACOES_DE_SUBPROGRAMAS_2():
 
             
         else:
-            print("Error: expected ';' at line "+ str(current_token['line']))
+            print_error(';')
             return False
 
+    # getSimbol()
     return True
 
 def DECLARACAO_DE_SUBPROGRAMA():
@@ -277,6 +287,7 @@ def DECLARACAO_DE_SUBPROGRAMA():
     if current_token['token'] == 'procedure':
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
+            getSimbol()
             if not ARGUMENTOS():
                 return False
 
@@ -293,18 +304,18 @@ def DECLARACAO_DE_SUBPROGRAMA():
                     return False
 
             else:
-                print("Error: expected ';' at line "+ str(current_token['line']))
+                print_error(';')
                 return False
 
         else:
-            print("Error: expected 'id' at line "+ str(current_token['line']))
+            print_error('id')
             return False
     else:
-        print("Error: expected 'procedure' at line "+ str(current_token['line']))
+        print_error('procedure')
         return False
 
 
-
+    # getSimbol()
     return True
 
 
@@ -314,5 +325,172 @@ def ARGUMENTOS():
         (LISTA_DE_PARAMETROS)
         | e
     """
+    if current_token['token'] == '(':
+        getSimbol()
+        if not LISTA_DE_PARAMETROS():
+            return False
 
-    pass
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+
+        else:
+            print_error(')')
+            return False
+
+    else:
+        return True # vazio
+    
+    
+    # getSimbol()
+    return True
+
+def LISTA_DE_PARAMETROS():
+    """
+    LISTA_DE_PARAMETROS
+        LISTA_DE_IDENTIFICADORES: TIPO LISTA_DE_PARAMETROS_2
+    """
+    global current_token
+
+    if LISTA_DE_IDENTIFICADORES() == False:
+        return False
+        
+        
+    if current_token['token'] == ":":
+        getSimbol()
+
+        if TIPO() == False:
+            return False
+
+        if LISTA_DE_PARAMETROS_2() == False:
+            return False
+
+    # getSimbol()
+    return True
+
+def LISTA_DE_PARAMETROS_2():
+    """
+    LISTA_DE_PARAMETROS_2:
+        ; LISTA_DE_IDENTIFICADORES: TIPO LISTA_DE_PARAMETROS_2
+        | e	
+    """
+    global current_token
+
+    if current_token['token'] == ';':
+        getSimbol()
+
+        if LISTA_DE_IDENTIFICADORES() == False:
+            return False
+
+        if current_token['token'] == ':':
+            getSimbol()
+
+            if LISTA_DE_PARAMETROS_2() == False:
+                return False
+
+        else:
+            print_error(':')
+            return False
+
+    else:
+        return True # vazio
+
+
+    return True
+
+
+def COMANDO_COMPOSTO():
+    """
+    COMANDO_COMPOSTO
+        begin
+        COMANDOS_OPCIONAIS
+        end
+    """
+    global current_token
+
+    if current_token['token'] == 'begin':
+        getSimbol()
+        if COMANDOS_OPCIONAIS() == False:
+            return False
+
+        if current_token['token'] == 'end':
+            getSimbol()
+            return True
+        else:
+            print_error('end')
+            return False
+
+    else:
+        print_error('begin')
+        return False
+
+
+    # getSimbol()
+    return True
+
+def COMANDOS_OPCIONAIS():
+    """
+    COMANDOS_OPCIONAIS
+        LISTA_DE_COMANDOS
+        | e
+    """
+
+    global current_token
+
+    if LISTA_DE_COMANDOS() == False:
+        return False
+    else:
+        getSimbol()
+        return True #vazio
+
+    # getSimbol()
+    return True
+
+def LISTA_DE_COMANDOS():
+    """
+    LISTA_DE_COMANDOS
+        COMANDO LISTA_DE_COMANDOS_2
+    """
+    global current_token
+
+    if COMANDO() == False:
+        return False
+
+    if LISTA_DE_COMANDOS_2() == False:
+        return False
+
+
+    # getSimbol()
+    return True
+
+
+def LISTA_DE_COMANDOS_2():
+    """
+    LISTA_DE_COMANDOS_2 : {
+        ; COMANDO LISTA_DE_COMANDOS_2
+        | e
+    }
+    """
+
+    if current_token['token'] == ';':
+        getSimbol()
+        if COMANDO() == False:
+            return False
+
+        if LISTA_DE_COMANDOS_2() == False:
+            return False
+
+    else:
+        return True #vazio
+
+def COMANDO():
+    """
+    COMANDO :
+        VARIAVEL := EXPRESSAO
+        | ATIVACAO_DE_PROCEDIMENTO
+        | COMANDO_COMPOSTO
+        | if EXPRESSAO then COMANDO PARTE_ELSE
+        | while EXPRESSAO do COMANDO
+    """
+    tokens = []
+    return True
