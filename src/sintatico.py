@@ -1,386 +1,891 @@
-import re
 from util import *
+import sys
 
+current_token = {
+    'token': '',
+    'classification': '',
+    'line': ''
+}
 
-def sintatico(input_string):
+def sintatico (_input):
+    global current_token, tokens
 
-    input_string+=' '
-    
+    tokens = _input
 
-    # List of key words
-    # lista de palavras chaves
-    reserved_words = build_list_of_reserved_words()
-    ignored_words = build_list_of_ignored()
-    relationals = build_list_of_relationals()
-    operators = build_list_of_operators()
-    attributers = build_list_of_attributers()
-    delimiters = build_list_of_delimiters()
+    # get and remove first token
+    current_token = tokens.pop(0)
 
-    # line counter
-    # Contador de linhas
-    number_of_lines = 1
-
-    # true when inside of a comment
-    # verifica se o comentario esta aberto
-    comment_is_open = False
-    line_comment = False
-
-    # string index
-    # index da string que vai sendo incrementada
-    current_index = 0
-
-    # palavra que vai ser formando caractere a caractere
-    word = ''
-
-    # expressao regular para detectar se uma palavra pode ser uma variavel
-    variable_reg = re.compile(r"[A-Za-z_]+[A-Za-z0-9_]*$")
-    
-    # expressao regular para detectar se uma palavra pode ser um inteiro
-    integer_reg = re.compile(r"[0-9]+$")
-    
-    # expressao regular para detectar se uma palavra pode ser um float
-    float_reg = re.compile(r"[0-9]+[\.]{0,1}[0-9]*$")
-    # float_reg = re.compile(r"[0-9]+\.[0-9]*$")
-
-
-    # lista de possibilidades que uma palavra pode ter.
-    # A medida que a PALAVRA (word) vai sendo formada, os itens da lista vai sendo removido
-    list_of_classifications = [
-        "Palavras reservadas",
-        "Ser ignorada",
-        "Relacional\t",
-        "Operador\t",
-        "Atribuidor\t",
-        "Delimitador\t",
-        "Inteiro\t\t",
-        "Float\t\t",
-        "Id\t\t",
-        "Numero 3D"
-    ]
-
-
-    current_possibilities = list_of_classifications[:]
-
-    # read all char
-    # Ler todos os caracteres, um a um
-    while current_index < len(input_string):
-        # remove inadequate categories
-        # Vai removendo todas as categorias em que a palvra nao pode ser ate so sobrar uma
-        while len(current_possibilities) > 1:
-
-            # condicao para evitar nao ler alem da string de entrada
-            if current_index < len(input_string):
-                
-                if input_string[current_index] == '\n':
-                    number_of_lines += 1
-                    current_index += 1
-                    line_comment = False
-                    continue
-
-                # palavras a serem ignoradas
-                elif input_string[current_index] in ignored_words:
-                    current_index += 1
-                    continue
-
-                # Comentario de linha
-                if input_string[current_index] == '/' and input_string[current_index+1] == '/':
-                    current_index += 2
-                    line_comment = True
-                    continue
-
-
-                # Comentario
-                if input_string[current_index] == '{' and not comment_is_open:
-                    # add_token('{', "comentario aberto", number_of_lines)
-                    current_index += 1
-                    comment_is_open = True
-                    continue
-
-                if input_string[current_index] == '}' and comment_is_open:
-                    # add_token('}', "comentario fechado", number_of_lines)
-                    current_index += 1
-                    comment_is_open = False
-                    continue
-                
-                if comment_is_open or line_comment:
-                    current_index += 1
-                    continue
-                
-                # coloca o caractere na "palavra"
-                word+=input_string[current_index]
-
-
-                # numero 3d
-                # ##    ## ##     ## ##     ## ######## ########   #######      #######  ########  
-                # ###   ## ##     ## ###   ### ##       ##     ## ##     ##    ##     ## ##     ## 
-                # ####  ## ##     ## #### #### ##       ##     ## ##     ##           ## ##     ## 
-                # ## ## ## ##     ## ## ### ## ######   ########  ##     ##     #######  ##     ## 
-                # ##  #### ##     ## ##     ## ##       ##   ##   ##     ##           ## ##     ## 
-                # ##   ### ##     ## ##     ## ##       ##    ##  ##     ##    ##     ## ##     ## 
-                # ##    ##  #######  ##     ## ######## ##     ##  #######      #######  ########  
-                if can_be_3d(word) and "Numero 3D" in current_possibilities:
-                    # concatena ate nao puder ser mais float
-                    while can_be_3d(word) and current_index < len(input_string):
-                        
-                        current_index+=1
-                        word+=input_string[current_index]
-                    
-                    # remove o caractere que quebrou pra nao imprimir-lo
-                    current_index-=1
-                    word = word[:-1]
-
-                    if can_be_3d_final(word):
-                        current_possibilities = ["Numero 3D"]
-                    else:
-                        try:
-                            current_possibilities = [
-                                "Palavras reservadas",
-                                "Ser ignorada",
-                                "Relacional\t",
-                                "Operador\t",
-                                "Atribuidor\t",
-                                "Delimitador\t",
-                                "Inteiro\t\t",
-                                "Float\t\t",
-                                "Id\t\t"
-                            ]
-
-                            current_index-=len(word)-1
-                            word = input_string[current_index]
-                        except ValueError:
-                            pass
-                
-
-                else:
-                    try:
-                        current_possibilities.remove("Numero 3D")
-                    except ValueError:
-                        pass
-
-
-
-
-
-                # verifica classe a classe
-                if not can_be_substring_of(word, reserved_words):
-                    try:
-                        current_possibilities.remove("Palavras reservadas")
-                    except ValueError:
-                        pass
-                if not can_be_substring_of(word, ignored_words):
-                    try:
-                        current_possibilities.remove("Ser ignorada")
-                    except ValueError:
-                        pass
-                if not can_be_substring_of(word, relationals):
-                    try:
-                        current_possibilities.remove("Relacional\t")
-                    except ValueError:
-                        pass
-                if not can_be_substring_of(word, operators):
-                    try:
-                        current_possibilities.remove("Operador\t")
-                    except ValueError:
-                        pass
-                if not can_be_substring_of(word, attributers):
-                    try:
-                        current_possibilities.remove("Atribuidor\t")
-                    except ValueError:
-                        pass
-                if word not in delimiters:
-                    try:
-                        current_possibilities.remove("Delimitador\t")
-                    except ValueError:
-                        pass
-                
-                # remove variable possibility
-                if not variable_reg.match(word) and "Id\t\t" in current_possibilities:
-                    current_possibilities.remove("Id\t\t")
-
-                # Float
-                if float_reg.match(word):
-                    # concatena ate nao puder ser mais float
-                    while float_reg.match(word) and current_index < len(input_string):
-                        
-                        current_index+=1
-                        word+=input_string[current_index]
-                    
-                    # remove o caractere que quebrou pra nao imprimir-lo
-                    current_index-=1
-                    word = word[:-1]
-                    current_possibilities = ["Float\t\t"]
-
-
-                else:
-                    try:
-                        current_possibilities.remove("Float\t\t")
-                    except ValueError:
-                        pass
-               
-               
-                # inteiro
-                if integer_reg.match(word):
-                    # concatena ate nao puder ser mais int
-                    while integer_reg.match(word) and current_index < len(input_string):
-                        
-                        current_index+=1
-                        word+=input_string[current_index]
-                    
-                    # remove o caractere que quebrou pra nao imprimir-lo
-                    current_index-=1
-                    word = word[:-1]
-                    current_possibilities = ["Inteiro\t\t"]
-
-
-                else:
-                    try:
-                        current_possibilities.remove("Inteiro\t\t")
-                    except ValueError:
-                        pass
-
-
-                # Special cases:
-                 # do not break string until does not match with variable
-                # se so pode ser uma variavel, continuar concatenando caracteres ate nao puder ser mais uma variavel
-                if "Id\t\t" in current_possibilities:
-                    while variable_reg.match(word) and current_index < len(input_string):
-                        current_index+=1
-                        # tratamento com \n. Evitar colocar \n em word
-                        if current_index < len(input_string) and input_string[current_index] <> '\n':
-                            word+=input_string[current_index]
-                        else:
-                            break
-
-                    # remove o caractere que quebrou a E.R
-                    if current_index < len(input_string) and input_string[current_index] <> '\n':
-                        word = word[:-1]
-                    else:
-                       pass
-
-                    current_index-=1
-                    
-
-                    current_possibilities = ["Id\t\t"]
-
-                # if word is a key word, desconsider word be a variable
-                if "Id\t\t" in current_possibilities:
-                    # word match exactly with a key word
-                        
-                        
-                    if word in reserved_words:
-                        current_possibilities = ["Palavras reservadas"]
-                    if word in ignored_words:
-                        current_possibilities = ["Ser ignorada"]
-                    if word in relationals:
-                        current_possibilities = ["Relacional\t"]
-                    if word in operators:
-                        current_possibilities = ["Operador\t"]
-                    if word in attributers:
-                        current_possibilities = ["Atribuidor\t"]
-                    if word in delimiters:
-                        current_possibilities = ["Delimitador\t"]
-
-
-
-                # :
-                if ':' == word and current_index < len(input_string) and '=' is not input_string[current_index+1]:
-                    current_possibilities = ["Delimitador\t"]
-
-            else:
-                break
-                
-            if len(current_possibilities) > 1:
-                current_index += 1
-        # end len(current_possibilities) > 1
-
-
-
-        # Error!!
-        if len(current_possibilities) == 0:
-            add_token(word, "erro\t\t", number_of_lines)
-
-        # found !!
-        if len(current_possibilities) == 1:
-            add_token(word, current_possibilities[0], number_of_lines)
-            
-        # find next token
-        word = ''
-        current_possibilities = list_of_classifications[:]
-        current_index += 1
-    
-    # End read all chars
-
-    if comment_is_open:
-        print "erro!!: comentario nao fechado"
-
-    return tokens
-
-"""
-    This function receive a word and a list. Its checks if the word can be in list.
-    Example: word = "casa" and list = ["casa", "predio"]
-    "cas" can be "casa", So return true
-
-    --------
-
-    Essa funcao recebe uma PALAVRA e uma LISTA. Ela verifica se a palavra pode estar na lista.
-
-    Exemplo: palavra = "cas" e lista = ["casa", "predio"]
-    "cas" pode ser "casa", entao retorna TRUE
-
- """
-def can_be_substring_of(word, a_list):
-    
-    # Casos que interferem no regex
-    word = word.replace("*", "\\*")
-    word = word.replace("+", "\\+")
-    word = word.replace(".", "\\.")
-    word = word.replace("(", "\\(")
-    word = word.replace(")", "\\)")
-
-    matches = []
-    for element in a_list:
-        pattern = re.compile(word+".*")
-        if pattern.match(element):
-            matches.append(element)
-    
-    if len(matches) > 0 :
-        return True
-    else:
+    # if fails stop analisys
+    if not PROGRAMA():
         return False
 
-def can_be_3d(word):
-    '''
-    Condicao para continuar concatenando caracteres na string
-    '''
-    case1 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*$")
-    case2 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x$")
-    case3 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*$")
-    case4 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y$")
-    case5 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y[0-9]+[\.]{0,1}[0-9]*$")
-    case6 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y[0-9]+[\.]{0,1}[0-9]*z$")
-
-    if case1.match(word):
-        return True
-    if case2.match(word):
-        return True
-    if case3.match(word):
-        return True
-    if case4.match(word):
-        return True
-    if case5.match(word):
-        return True
-    if case6.match(word):
-        return True
-
-    return False
+    # only true if read all tokens
+    if len(tokens) != 0:
+        return False
 
 
-def can_be_3d_final(word):
+    return True
 
-    case6 = re.compile(r"[0-9]+[\.]{0,1}[0-9]*x[0-9]+[\.]{0,1}[0-9]*y[0-9]+[\.]{0,1}[0-9]*z$")
-
+def print_error(expected, line=None):
+    global current_token
     
-    if case6.match(word):
+    if line == None:
+        line = current_token['line']
+
+    # print ("erro: expected: '"+ expected +"' at line " + str(line)+". Found '"+current_token['token']+"'", end='\r') #python 3
+    sys.stdout.write('\r'+"erro: expected: '"+ expected +"' at line " + str(line)+". Found '"+current_token['token']+"'")
+    sys.stdout.write("\033[K")
+    sys.stdout.flush() #python 2
+
+def getSimbol():
+    global current_token
+    current_token = tokens.pop(0)
+    # return current_token
+
+
+def PROGRAMA():
+    """
+    PROGRAMA 
+        program id;
+        DECLARACOES_VARIAVEIS
+        DECLARACOES_DE_SUBPROGRAMAS
+        COMANDO_COMPOSTO
+        .
+    """
+    global current_token
+
+    if current_token['token'] == 'program':
+        getSimbol()
+        if current_token['classification'] == 'Id\t\t':
+            getSimbol()
+            if current_token['token'] == ';':
+                getSimbol()
+                if not DECLARACOES_VARIAVEIS():
+                    return False
+                
+                if not DECLARACOES_DE_SUBPROGRAMAS():
+                    return False
+                
+                if not COMANDO_COMPOSTO():
+                    return False
+                
+                if current_token['token'] == '.':
+                    sys.stdout.write('\r'+"")
+                    sys.stdout.write("\033[K")
+                    sys.stdout.flush() #python 2
+                    return True
+
+                else:
+                    print_error('.')
+                    return False
+                
+                
+            else:
+                print_error(';')
+                return False
+        else:
+            print_error('id')
+            return False
+    else:
+        print_error('program')
+        return False
+
+    sys.stdout.write('\r'+"")
+    sys.stdout.write("\033[K")
+    sys.stdout.flush() #python 2
+    return True
+
+
+def DECLARACOES_VARIAVEIS():
+    """
+    DECLARACOES_VARIAVEIS 
+        var LISTA_DECLARACOES_VARIAVEIS
+        | e
+    """
+    global current_token
+
+    if current_token['token'] == 'var':
+        getSimbol()
+        if not LISTA_DECLARACOES_VARIAVEIS():
+            return False
+    else:
+        return True # vazio
+
+    return True
+
+
+def LISTA_DECLARACOES_VARIAVEIS():
+    """
+    LISTA_DECLARACOES_VARIAVEIS 
+        LISTA_DE_IDENTIFICADORES: TIPO; LISTA_DECLARACOES_VARIAVEIS_2
+    """
+    global current_token
+    
+    if not LISTA_DE_IDENTIFICADORES():
+        return False
+    
+    if current_token['token'] == ':':
+        getSimbol()
+        if not TIPO():
+            return False
+
+        if current_token['token'] == ';':
+            getSimbol()
+            if not LISTA_DECLARACOES_VARIAVEIS_2():
+                return False
+        
+        else:
+            print_error(';')
+            return False
+
+    else:
+        print_error(':')
+        return False
+    
+    # getSimbol()
+    return True
+
+def LISTA_DECLARACOES_VARIAVEIS_2():
+    """
+    LISTA_DECLARACOES_VARIAVEIS_2 : {
+        LISTA_DE_IDENTIFICADORES: TIPO; LISTA_DECLARACOES_VARIAVEIS_2
+        | e
+
+    }
+    """
+    global current_token
+
+    if not LISTA_DE_IDENTIFICADORES():
+        return True # vazio
+    
+    if current_token['token'] == ':':
+        getSimbol()
+        if not TIPO():
+            return False
+
+        if current_token['token'] == ';':
+            getSimbol()
+            if not LISTA_DECLARACOES_VARIAVEIS_2():
+                return False
+        
+        else:
+            print_error(';')
+            return False
+
+    else:
+        print_error(':')
+        return False
+
+    # getSimbol()
+    return True
+
+
+def LISTA_DE_IDENTIFICADORES():
+    """
+    LISTA_DE_IDENTIFICADORES 
+        id LISTA_DE_IDENTIFICADORES_2
+    """
+    global current_token
+
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+        if not LISTA_DE_IDENTIFICADORES_2():
+            return False
+
+
+    else:
+        print_error('id')
+        return False
+
+    # getSimbol()
+    return True
+
+def LISTA_DE_IDENTIFICADORES_2():
+    """
+    LISTA_DE_IDENTIFICADORES_2 
+        , id LISTA_DE_IDENTIFICADORES_2
+        | e
+    """
+    global current_token
+    if current_token['token'] == ',':
+        getSimbol()
+        if current_token['classification'] == 'Id\t\t':
+            getSimbol()
+            if not LISTA_DE_IDENTIFICADORES_2():
+                return False
+        else:
+            print_error('id')
+            return False
+    else:
+        return True # vazio
+
+    # getSimbol()
+    return True
+
+
+def TIPO():
+    """
+    TIPO 
+        integer
+        | real
+        | boolean
+    """
+    global current_token
+
+    if current_token['token'] == 'integer' or current_token['token'] == 'real' or current_token['token'] == 'boolean':
+        getSimbol()
         return True
 
+    else:
+        print_error("'inteiro/real/boolean")
+        return False
+
+
+def DECLARACOES_DE_SUBPROGRAMAS():
+    """
+    DECLARACOES_DE_SUBPROGRAMAS 
+        | DECLARACOES_DE_SUBPROGRAMAS_2
+    """
+
+    global current_token
+
+    if not DECLARACOES_DE_SUBPROGRAMAS_2():
+        return False
+
+    else:
+        # getSimbol()
+        return True
+
+def DECLARACOES_DE_SUBPROGRAMAS_2():
+    """
+    DECLARACOES_DE_SUBPROGRAMAS_2 
+        DECLARACAO_DE_SUBPROGRAMA; DECLARACOES_DE_SUBPROGRAMAS_2
+        | e
+    """
+
+    global current_token
+
+    if not DECLARACAO_DE_SUBPROGRAMA():
+        return True # vazio
+
+    else:
+        if current_token['token'] == ';':
+            getSimbol()
+            
+            if not DECLARACOES_DE_SUBPROGRAMAS_2():
+                return False
+
+            
+        else:
+            print_error(';')
+            return False
+
+    # getSimbol()
+    return True
+
+def DECLARACAO_DE_SUBPROGRAMA():
+    """
+    DECLARACAO_DE_SUBPROGRAMA 
+        procedure id ARGUMENTOS;
+        DECLARACOES_VARIAVEIS
+        DECLARACOES_DE_SUBPROGRAMAS
+        COMANDO_COMPOSTO
+    """
+
+    global current_token
+    
+    if current_token['token'] == 'procedure':
+        getSimbol()
+        if current_token['classification'] == 'Id\t\t':
+            getSimbol()
+            if not ARGUMENTOS():
+                return False
+
+            if current_token['token'] == ';':
+                getSimbol()
+
+                if not DECLARACOES_VARIAVEIS():
+                    return False
+
+                if not DECLARACOES_DE_SUBPROGRAMAS():
+                    return False
+
+                if not COMANDO_COMPOSTO():
+                    return False
+
+            else:
+                print_error(';')
+                return False
+
+        else:
+            print_error('id')
+            return False
+    else:
+        print_error('procedure')
+        return False
+
+
+    # getSimbol()
+    return True
+
+
+def ARGUMENTOS():
+    """
+    ARGUMENTOS 
+        (LISTA_DE_PARAMETROS)
+        | e
+    """
+    if current_token['token'] == '(':
+        getSimbol()
+        if not LISTA_DE_PARAMETROS():
+            return False
+
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+
+        else:
+            print_error(')')
+            return False
+
+    else:
+        return True # vazio
+    
+    
+    # getSimbol()
+    return True
+
+def LISTA_DE_PARAMETROS():
+    """
+    LISTA_DE_PARAMETROS
+        LISTA_DE_IDENTIFICADORES: TIPO LISTA_DE_PARAMETROS_2
+    """
+    global current_token
+
+    if LISTA_DE_IDENTIFICADORES() == False:
+        return False
+        
+        
+    if current_token['token'] == ":":
+        getSimbol()
+
+        if TIPO() == False:
+            return False
+
+        if LISTA_DE_PARAMETROS_2() == False:
+            return False
+
+    # getSimbol()
+    return True
+
+def LISTA_DE_PARAMETROS_2():
+    """
+    LISTA_DE_PARAMETROS_2:
+        ; LISTA_DE_IDENTIFICADORES: TIPO LISTA_DE_PARAMETROS_2
+        | e	
+    """
+    global current_token
+
+    if current_token['token'] == ';':
+        getSimbol()
+
+        if LISTA_DE_IDENTIFICADORES() == False:
+            return False
+
+        if current_token['token'] == ':':
+            getSimbol()
+
+            if LISTA_DE_PARAMETROS_2() == False:
+                return False
+
+        else:
+            print_error(':')
+            return False
+
+    else:
+        return True # vazio
+
+
+    return True
+
+
+def COMANDO_COMPOSTO():
+    """
+    COMANDO_COMPOSTO
+        begin
+        COMANDOS_OPCIONAIS
+        end
+    """
+    global current_token
+
+    if current_token['token'] == 'begin':
+        getSimbol()
+        if COMANDOS_OPCIONAIS() == False:
+            return False
+
+        if current_token['token'] == 'end':
+            getSimbol()
+            return True
+        else:
+            print_error('end')
+            return False
+
+    else:
+        print_error('begin')
+        return False
+
+
+    # getSimbol()
+    return True
+
+def COMANDOS_OPCIONAIS():
+    """
+    COMANDOS_OPCIONAIS
+        LISTA_DE_COMANDOS
+        | e
+    """
+
+    global current_token
+
+    if LISTA_DE_COMANDOS() == False:
+        return False
+    else:
+        return True #vazio
+
+    # getSimbol()
+    return True
+
+def LISTA_DE_COMANDOS():
+    """
+    LISTA_DE_COMANDOS
+        COMANDO LISTA_DE_COMANDOS_2
+    """
+    global current_token
+
+    if COMANDO() == False:
+        return False
+
+    if LISTA_DE_COMANDOS_2() == False:
+        return False
+
+
+    # getSimbol()
+    return True
+
+
+def LISTA_DE_COMANDOS_2():
+    """
+    LISTA_DE_COMANDOS_2 : {
+        ; COMANDO LISTA_DE_COMANDOS_2
+        | e
+    }
+    """
+
+    if current_token['token'] == ';':
+        getSimbol()
+        if COMANDO() == False:
+            return False
+
+        if LISTA_DE_COMANDOS_2() == False:
+            return False
+
+    else:
+        return True #vazio
+
+def COMANDO():
+    """
+    COMANDO :
+        VARIAVEL := EXPRESSAO
+        | ATIVACAO_DE_PROCEDIMENTO
+        | COMANDO_COMPOSTO
+        | if EXPRESSAO then COMANDO PARTE_ELSE
+        | while EXPRESSAO do COMANDO
+    """
+    if not VARIAVEL():
+        if not ATIVACAO_DE_PROCEDIMENTO():
+            if not COMANDO_COMPOSTO():
+                if current_token['token'] == 'if':
+                    getSimbol()
+                    if not EXPRESSAO():
+                        return False
+
+                    if current_token['token'] == 'then':
+                        getSimbol()
+                        if not COMANDO():
+                            return False
+
+                        if not PARTE_ELSE():
+                            return False
+
+                    else:
+                        print_error("then")
+                        return False
+
+
+                elif current_token['token'] == 'while':
+                    getSimbol()
+
+                    if not EXPRESSAO():
+                        return False
+
+                    if current_token['token'] == 'do':
+                        getSimbol()
+                        if not COMANDO(): return False
+                    else:
+                        print_error("do")
+                        return False
+
+
+
+                else:
+                    print_error("'if' or 'while'")
+                    return False
+                    
+    else:
+        if current_token['token'] == ':=':
+            getSimbol()
+
+            if not EXPRESSAO():
+                return False
+
+
+
+    return True
+
+
+def PARTE_ELSE():
+    """
+    PARTE_ELSE :
+        else COMANDO
+        | e
+    """
+
+    global current_token
+
+    if current_token['token'] == 'else':
+        getSimbol()
+
+        if not COMANDO(): return False
+
+    else:
+        return True # vazio
+
+    return True
+
+def VARIAVEL():
+    """
+    VARIAVEL :
+	    id
+    """
+    global current_token
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+        return True 
+    else:
+        print_error('Id')
+        return False
+
+def ATIVACAO_DE_PROCEDIMENTO():
+    """
+    ATIVACAO_DE_PROCEDIMENTO :
+	    id ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE
+    """
+
+    global current_token
+
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+
+        if not ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE(): return False
+
+    else:
+        print_error('id')
+        return False
+
+    return True
+
+def ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE():
+    """
+    ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE :
+        (LISTA_DE_EXPRESSOES)
+        | e
+    """
+    global current_token
+    
+    if current_token['token'] == '(':
+        getSimbol()
+        if not LISTA_DE_EXPRESSOES(): return False
+        
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+
+        else:
+            print_error(')')
+            return False
+
+    else:
+        return True # vazio
+    
+    return True
+
+
+def OP_MULTIPLICATIVO():
+    """
+    OP_MULTIPLICATIVO :
+        *
+        | /
+        | and
+    """
+
+    global current_token
+
+    if current_token['token'] == '*' or current_token['token'] == '/' or current_token == 'and':
+        getSimbol()
+        return True
+    else:
+        print_error("'*', '/' or 'and'")
+        return False
+
+def OP_ADITIVO():
+    """
+    OP_ADITIVO :
+        +
+        | -
+        | or
+    """
+
+    global current_token
+    if current_token['token'] == '+' or current_token['token'] == '-' or current_token['token'] == 'or':
+        getSimbol()
+        return True
+    else:
+        print_error("'+', '-', or 'or'")
+        return False
+
+def OP_RELACIONAL():
+    """
+    OP_RELACIONAL :
+        =
+        | <
+        | >
+        | <=
+        | >=
+        | <>
+    """
+
+    global current_token
+    if current_token['token'] == '=' or current_token['token'] == '<' or current_token['token'] == '>' or current_token['token'] == '<=' or current_token['token'] == '>=' or current_token['token'] == '<>':
+        getSimbol()
+        return True
+    else:
+        print_error("'=', '<', '>', '<=', '>=' or '<>'")
+        return False
+
+def SINAL():
+    """
+    SINAL :
+        + 
+        | -
+    """
+
+    global current_token
+    if current_token['token'] == '+' or current_token['token'] == '-':
+        getSimbol()
+        return True
+    else:
+        print_error("'+' or '-'")
+        return False
+
+def FATOR():
+    """
+    FATOR :
+        id FATOR_DESAMBIGUIDADE
+        | NUM_INT
+        | NUM_REAL
+        | true
+        | false
+        | (EXPRESSAO)
+        | not FATOR
+    """
+    global current_token
+
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+        if not FATOR_DESAMBIGUIDADE():
+            return False
+        else:
+            return True
+    else:
+
+        if current_token['classification'] == 'Inteiro\t\t':
+            getSimbol()
+            return True
+
+        if current_token['classification'] == 'Float\t\t':
+            getSimbol()
+            return True
+
+        if current_token['classification'] == 'true' or current_token['token'] == 'false':
+            getSimbol()
+            return True
+        
+        if current_token['token'] == '(':
+            getSimbol()
+            if not EXPRESSAO():
+                return False
+            
+            if current_token['token'] == ')':
+                getSimbol()
+                return True
+            else:
+                print_error(')')
+                return False
+                
+        if current_token ['token'] == 'not':
+            getSimbol()
+            if not FATOR():
+                return False
+    
+    # special case:
+    print_error("id or '('")
     return False
+
+def FATOR_DESAMBIGUIDADE():
+    """
+    FATOR_DESAMBIGUIDADE
+        (LISTA_DE_EXPRESSOES)
+        | e
+    """
+    
+    global current_token
+    if current_token['token'] == '(':
+        getSimbol()
+        if not LISTA_DE_EXPRESSOES():
+            return False
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+
+        else:
+            print_error(")")
+            return False
+    else:
+        return True # vazio
+
+def LISTA_DE_EXPRESSOES():
+    """
+    LISTA_DE_EXPRESSOES :
+	    EXPRESSAO LISTA_DE_EXPRESSOES_2
+    """
+
+    if not EXPRESSAO():
+        return False
+
+    if not LISTA_DE_EXPRESSOES_2():
+        return False
+
+    return True
+
+def LISTA_DE_EXPRESSOES_2():
+    """
+    LISTA_DE_EXPRESSOES_2
+        , EXPRESSAO LISTA_DE_EXPRESSOES_2
+        | e
+    """
+    
+    if current_token['token'] == ',':
+        getSimbol()
+
+        if not EXPRESSAO():
+            return  False
+
+        if not LISTA_DE_EXPRESSOES_2():
+            return False
+
+    else:
+        return True # vazio
+    
+    return True
+
+def EXPRESSAO():
+    """
+    EXPRESAO
+        EXPRESSAO_SIMPLES EXPRESSAO_DESAMBIGUIDADE
+    """
+
+    if not EXPRESAO_SIMPLES() : return False
+
+    if not EXPRESSAO_DESAMBIGUIDADE(): return False
+
+    return True
+
+def EXPRESSAO_DESAMBIGUIDADE():
+    """
+    e
+	| OP_RELACIONAL EXPRESSAO_SIMPLES
+    """
+    if not OP_RELACIONAL():
+        return True # vazio
+
+    if not EXPRESAO_SIMPLES():
+        return False
+
+    return True
+
+def EXPRESAO_SIMPLES():
+    """
+    EXPRESSAO_SIMPLES :
+        TERMO EXPRESSAO_SIMPLES_2
+        | SINAL TERMO EXPRESSAO_SIMPLES_2
+    """
+    
+    if not TERMO():
+        if not SINAL(): return False
+        if not TERMO(): return False
+        if not EXPRESSAO_SIMPLES_2(): return False
+    
+    else:
+        if not EXPRESSAO_SIMPLES_2(): return False
+
+
+    return True
+
+def EXPRESSAO_SIMPLES_2 ():
+    """
+    EXPRESSAO_SIMPLES_2 : {
+	    OP_ADITIVO TERMO EXPRESSAO_SIMPLES_2
+	    | e
+    """
+
+    if not OP_ADITIVO():
+        return True # vazio
+
+    if not TERMO() : return False
+    if not EXPRESSAO_SIMPLES_2() : return False
+
+    return True
+
+def TERMO():
+    """
+    TERMO :
+	    FATOR TERMO_2
+    """
+    if not FATOR(): return False
+    if not TERMO_2(): return False
+
+    return True
+
+def TERMO_2():
+    """
+    TERMO_2 :{
+        OP_MULTIPLICATIVO FATOR
+        | e
+    """
+
+    if not OP_MULTIPLICATIVO():
+        return True # vazio
+
+    if not FATOR(): return False
+
+    return True
