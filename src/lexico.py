@@ -316,3 +316,130 @@ def ARGUMENTOS():
     """
 
     pass
+
+def OP_MULTIPLICATIVO():
+    """
+    OP_MULTIPLICATIVO →
+        *
+        | /
+        | and
+    """
+
+    global current_token
+    if current_token['token'] == '*' or current_token['token'] == '/' or current_token == 'and':
+        getSimbol()
+        return True
+    else:
+        print_error("'*', '/' or 'and'")
+        return False
+
+def OP_ADITIVO():
+    """
+    OP_ADITIVO →
+        +
+        | -
+        | or
+    """
+
+    global current_token
+    if current_token['token'] == '+' or current_token['token'] == '-' or current_token['token'] == 'or':
+        getSimbol()
+        return True
+    else:
+        print_error("'+', '-', or 'or'")
+        return False
+
+def OP_RELACIONAL():
+    """
+    OP_RELACIONAL →
+        =
+        | <
+        | >
+        | <=
+        | >=
+        | <>
+    """
+
+    global current_token
+    if current_token['token'] == '=' or current_token['token'] == '<' or current_token['token'] == '>' or current_token['token'] == '<=' or current_token['token'] == '>=' or current_token['token'] == '<>':
+        getSimbol()
+        return True
+    else:
+        print_error("'=', '<', '>', '<=', '>=' or '<>'")
+        return False
+
+def SINAL():
+    """
+    SINAL →
+        + 
+        | -
+    """
+
+    global current_token
+    if current_token['token'] == '+' or current_token['token'] == '-':
+        getSimbol()
+        return True
+    else:
+        print_error("'+' or '-'")
+
+def FATOR():
+    """
+    FATOR →
+        id FATOR_DESAMBIGUIDADE
+        | NUM_INT
+        | NUM_REAL
+        | true #token
+        | false #token
+        | (EXPRESSÃO)
+        | not #token FATOR
+    """
+    global current_token
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+        if not FATOR_DESAMBIGUIDADE():
+            return False
+        else:
+            getSimbol()
+            return True
+    else:
+        print_error("id")
+
+    if not NUM_INT():
+        return False
+
+    if not NUM_REAL():
+        return False
+
+    if current_token['token'] == true or current_token['token'] == false:
+        getSimbol()
+        return True
+    
+    if current_token['token'] == '(':
+        getSimbol()
+        if not EXPRESSAO():
+            return False
+        else:
+            getSimbol()
+            return True
+    
+    if current_token ['token'] == 'not':
+        getSimbol()
+        if not FATOR():
+            return False
+        else:
+            getSimbol()
+            return True
+
+
+def FATOR_DESAMBIGUIDADE():
+    
+    global current_token
+    if current_token['token'] == '(':
+        if not LISTA_DE_EXPRESSOES():
+            return False
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+        else:
+            print_error(")")
+
