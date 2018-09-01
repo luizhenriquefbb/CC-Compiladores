@@ -29,7 +29,7 @@ def print_error(expected, line=None):
     if line == None:
         line = current_token['line']
 
-    print ("erro: expected: '"+ expected +"' at line " + str(line)+". Found '"+current_token['token']+"'")
+    print ("erro: expected: '"+ expected +"' at line " + str(line)+". Found '"+current_token['token']+"'", end='\r')
 
 def getSimbol():
     global current_token
@@ -492,8 +492,134 @@ def COMANDO():
         | if EXPRESSAO then COMANDO PARTE_ELSE
         | while EXPRESSAO do COMANDO
     """
-    tokens = []
+    if not VARIAVEL():
+        if not ATIVACAO_DE_PROCEDIMENTO():
+            if not COMANDO_COMPOSTO():
+                if current_token['token'] == 'if':
+                    getSimbol()
+                    if not EXPRESSAO():
+                        return False
+
+                    if current_token['token'] == 'then':
+                        getSimbol()
+                        if not COMANDO():
+                            return False
+
+                        if not PARTE_ELSE():
+                            return False
+
+                    else:
+                        print_error("then")
+                        return False
+
+
+                elif current_token['token'] == 'while':
+                    getSimbol()
+
+                    if not EXPRESSAO():
+                        return False
+
+                    if current_token['token'] == 'do':
+                        getSimbol()
+                        if not COMANDO(): return False
+                    else:
+                        print_error("do")
+                        return False
+
+
+
+                else:
+                    print_error("'if' or 'while'")
+                    return False
+                    
+    else:
+        if current_token['token'] == ':=':
+            getSimbol()
+
+            if not EXPRESSAO():
+                return False
+
+
+
     return True
+
+
+def PARTE_ELSE():
+    """
+    PARTE_ELSE :
+        else COMANDO
+        | e
+    """
+
+    global current_token
+
+    if current_token['token'] == 'else':
+        getSimbol()
+
+        if not COMANDO(): return False
+
+    else:
+        return True # vazio
+
+    return True
+
+def VARIAVEL():
+    """
+    VARIAVEL :
+	    id
+    """
+    global current_token
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+        return True 
+    else:
+        print_error('Id')
+        return False
+
+def ATIVACAO_DE_PROCEDIMENTO():
+    """
+    ATIVACAO_DE_PROCEDIMENTO :
+	    id ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE
+    """
+
+    global current_token
+
+    if current_token['classification'] == 'Id\t\t':
+        getSimbol()
+
+        if not ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE(): return False
+
+    else:
+        print_error('id')
+        return False
+
+    return True
+
+def ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE():
+    """
+    ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE :
+        (LISTA_DE_EXPRESSOES)
+        | e
+    """
+    global current_token
+    
+    if current_token['token'] == '(':
+        getSimbol()
+        if not LISTA_DE_EXPRESSOES(): return False
+        
+        if current_token['token'] == ')':
+            getSimbol()
+            return True
+
+        else:
+            print_error(')')
+            return False
+
+    else:
+        return True # vazio
+    
+    return True
+
 
 def OP_MULTIPLICATIVO():
     """
@@ -570,7 +696,7 @@ def FATOR():
         | NUM_REAL
         | true
         | false
-        | (EXPRESSÃO)
+        | (EXPRESSAO)
         | not FATOR
     """
     global current_token
@@ -616,13 +742,10 @@ def FATOR():
     print_error("id or '('")
     return False
 
-
-
-
 def FATOR_DESAMBIGUIDADE():
     """
     FATOR_DESAMBIGUIDADE
-        (LISTA_DE_EXPRESSÕES)
+        (LISTA_DE_EXPRESSOES)
         | e
     """
     
@@ -637,13 +760,14 @@ def FATOR_DESAMBIGUIDADE():
 
         else:
             print_error(")")
+            return False
     else:
         return True # vazio
 
 def LISTA_DE_EXPRESSOES():
     """
-    LISTA_DE_EXPRESSÕES :
-	    EXPRESSÃO LISTA_DE_EXPRESSÕES_2
+    LISTA_DE_EXPRESSOES :
+	    EXPRESSAO LISTA_DE_EXPRESSOES_2
     """
 
     if not EXPRESSAO():
@@ -654,10 +778,105 @@ def LISTA_DE_EXPRESSOES():
 
     return True
 
-def LISTA_DE_EXPRESSÕES_2 ():
+def LISTA_DE_EXPRESSOES_2():
     """
-    LISTA_DE_EXPRESSÕES_2
-        , EXPRESSÃO LISTA_DE_EXPRESSÕES_2
-        | ε
+    LISTA_DE_EXPRESSOES_2
+        , EXPRESSAO LISTA_DE_EXPRESSOES_2
+        | e
     """
-    pass
+    
+    if current_token['token'] == ',':
+        getSimbol()
+
+        if not EXPRESSAO():
+            return  False
+
+        if not LISTA_DE_EXPRESSOES_2():
+            return False
+
+    else:
+        return True # vazio
+    
+    return True
+
+def EXPRESSAO():
+    """
+    EXPRESAO
+        EXPRESSAO_SIMPLES EXPRESSAO_DESAMBIGUIDADE
+    """
+
+    if not EXPRESAO_SIMPLES() : return False
+
+    if not EXPRESSAO_DESAMBIGUIDADE(): return False
+
+    return True
+
+def EXPRESSAO_DESAMBIGUIDADE():
+    """
+    e
+	| OP_RELACIONAL EXPRESSAO_SIMPLES
+    """
+    if not OP_RELACIONAL():
+        return True # vazio
+
+    if not EXPRESAO_SIMPLES():
+        return False
+
+    return True
+
+def EXPRESAO_SIMPLES():
+    """
+    EXPRESSAO_SIMPLES :
+        TERMO EXPRESSAO_SIMPLES_2
+        | SINAL TERMO EXPRESSAO_SIMPLES_2
+    """
+    
+    if not TERMO():
+        if not SINAL(): return False
+        if not TERMO(): return False
+        if not EXPRESSAO_SIMPLES_2(): return False
+    
+    else:
+        if not EXPRESSAO_SIMPLES_2(): return False
+
+
+    return True
+
+def EXPRESSAO_SIMPLES_2 ():
+    """
+    EXPRESSAO_SIMPLES_2 : {
+	    OP_ADITIVO TERMO EXPRESSAO_SIMPLES_2
+	    | e
+    """
+
+    if not OP_ADITIVO():
+        return True # vazio
+
+    if not TERMO() : return False
+    if not EXPRESSAO_SIMPLES_2() : return False
+
+    return True
+
+def TERMO():
+    """
+    TERMO :
+	    FATOR TERMO_2
+    """
+    if not FATOR(): return False
+    if not TERMO_2(): return False
+
+    return True
+
+def TERMO_2():
+    """
+    TERMO_2 :{
+        OP_MULTIPLICATIVO FATOR
+        | e
+    """
+
+    if not OP_MULTIPLICATIVO():
+        return True # vazio
+
+    if not FATOR(): return False
+
+    return True
