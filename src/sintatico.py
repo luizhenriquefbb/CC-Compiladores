@@ -505,13 +505,19 @@ def LISTA_DE_COMANDOS_2():
     if current_token['token'] == ';':
         getSimbol()
         if COMANDO() == False:
-            return False
+            # return False
+        # gambiarra ================
+            return True # ';' opcional
+        # ============================
+        
 
         if LISTA_DE_COMANDOS_2() == False:
             return False
 
     else:
         return True #vazio
+
+    return True
 
 def COMANDO():
     """
@@ -521,6 +527,7 @@ def COMANDO():
         | COMANDO_COMPOSTO
         | if EXPRESSAO then COMANDO PARTE_ELSE
         | while EXPRESSAO do COMANDO
+        # modificacao: do LISTA_DE_COMANDOS while (EXPRESSAO)
     """
     if not VARIAVEL():
         if not ATIVACAO_DE_PROCEDIMENTO():
@@ -556,18 +563,52 @@ def COMANDO():
                         print_error("do")
                         return False
 
+                # =============== MODIFICACAO AULA ==================
+                elif current_token['token'] == 'do':
+                    getSimbol()
+                    if LISTA_DE_COMANDOS() == False:
+                        return False
+                    
+                    if current_token['token'] == 'while':
+                        getSimbol()
+
+                        if current_token['token'] == '(':
+                            getSimbol()
+
+                            if EXPRESSAO() == False:
+                                return False
+
+                            if current_token['token'] == ')':
+                                getSimbol()
+                                return True
+
+                            
+                        else:
+                            print_error('(')
+                            return False
+
+                    else:
+                        print_error('while')
+                        return False
 
 
                 else:
-                    print_error("'if' or 'while'")
+
+                    print_error("'if' or 'while' or 'do")
                     return False
-                    
+
+                # ===============================================
+
     else:
         if current_token['token'] == ':=':
             getSimbol()
 
             if not EXPRESSAO():
                 return False
+
+        else:
+            print_error(':=')
+            return False
 
 
 
