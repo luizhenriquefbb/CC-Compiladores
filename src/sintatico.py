@@ -408,13 +408,13 @@ def LISTA_DE_PARAMETROS_2():
 
     return True
 
-
+# Ponto e virgula
 def COMANDO_COMPOSTO():
     """
     COMANDO_COMPOSTO
         begin
         COMANDOS_OPCIONAIS
-        end
+        COMANDO_COMPOSTO_DESAMBIGUIDADE
     """
     global current_token
 
@@ -423,12 +423,9 @@ def COMANDO_COMPOSTO():
         if COMANDOS_OPCIONAIS() == False:
             return False
 
-        if current_token['token'] == 'end':
-            getSimbol()
-            return True
-        else:
-            print_error('end')
-            return False
+        if not COMANDO_COMPOSTO_DESAMBIGUIDADE():
+           return False
+        
 
     else:
         print_error('begin')
@@ -436,6 +433,30 @@ def COMANDO_COMPOSTO():
 
 
     # getSimbol()
+    return True
+
+def COMANDO_COMPOSTO_DESAMBIGUIDADE():
+    """
+    COMANDO_COMPOSTO_DESAMBIGUIDADE
+        ; end
+        | end
+    """
+    if current_token['token'] == ";":
+        getSimbol()
+        if current_token['token'] == 'end':
+            getSimbol()
+
+        else:
+            print_error("end")
+            return False
+    else:
+        if current_token['token'] == 'end':
+            getSimbol()
+
+        else:
+            print_error("';' or 'end'")
+            return False
+
     return True
 
 def COMANDOS_OPCIONAIS():
