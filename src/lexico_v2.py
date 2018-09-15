@@ -48,34 +48,34 @@ class LexicalAnalyzer:
                                 break
                         break
 
-                    ######################## MODIFICAÇÃO: Número Complexo ########################
-                    elif program[i] == "i": #verifica se é 'i'
-                        token += program[i]
-                        i += 1
-                        if program[i] in "+-":  #verifica o sinal
-                            token += program[i]
-                            i+=1
-                            if program[i].isdigit():    #procura os dígitos
-                                token += program[i]
-                                i+=1
-                                lex = "Número Complexo"
-                                while i < tam-1:    #procura os outros dígitos
-                                    if program[i].isdigit():
-                                        token += program[i]
-                                        i+=1
-                                    else:
-                                        break
-                            else:
-                                token = token[:-2]
-                                i -= 2
-                                break
-                        else:
-                            token = token[:-1]
-                            i -= 1
-                            break
+                    ######################## MODIFICAÇÃO:  ########################
+                    # elif program[i] == "i": #verifica se é 'i'
+                    #     token += program[i]
+                    #     i += 1
+                    #     if program[i] in "+-":  #verifica o sinal
+                    #         token += program[i]
+                    #         i+=1
+                    #         if program[i].isdigit():    #procura os dígitos
+                    #             token += program[i]
+                    #             i+=1
+                    #             lex = "Número Complexo"
+                    #             while i < tam-1:    #procura os outros dígitos
+                    #                 if program[i].isdigit():
+                    #                     token += program[i]
+                    #                     i+=1
+                    #                 else:
+                    #                     break
+                    #         else:
+                    #             token = token[:-2]
+                    #             i -= 2
+                    #             break
+                    #     else:
+                    #         token = token[:-1]
+                    #         i -= 1
+                    #         break
+                    ######################## MODIFICAÇÃO ########################
                     else:
                         break
-                    ######################## MODIFICAÇÃO ########################
 
             elif program[i].isalpha():      #Verifica se o elemento é uma letra
                 token += program[i]

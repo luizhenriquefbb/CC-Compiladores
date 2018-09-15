@@ -8,9 +8,11 @@ begin  {tente gerar um erro usando um caracter nao permitido.. tipo &}
    begin
       NUMERO := -10 / (-3);
       do
+        NUMERO := -10 / (-3);
         NUMERO := -10 / (-3)
       while(numero > 20)
 
     end;
    final := NUMERO + 1
+   final := NUMERO + 1;
 end.

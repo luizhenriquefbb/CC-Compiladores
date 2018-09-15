@@ -2,8 +2,10 @@ program Test3; {programa para teste do lexico}
 var
    NUMERO, x  : integer;
    final,y   : integer;
+   a : boolean;
 begin
    do
-		y := x + y;
-	while (x < 0)
+        a := true;
+		y := x + y
+	while (x < 0);
 end.

@@ -1,14 +1,28 @@
+ # -*- coding: utf-8 -*- 
+
 from util import *
 import sys
 
+from symbolsTable import SymbolsTable
+from typesStack import TypesStack
+
+# Default object for a token
 current_token = {
     'token': '',
     'classification': '',
     'line': ''
 }
 
+# global auxiliary objects
+tabela = SymbolsTable()
+pilha_tipos = TypesStack()
+
+cont_begin_end = 0 # counter of begin and ends
+
+
+
 def sintatico (_input):
-    global current_token, tokens
+    global current_token, tokens, tabela, pilha_tipos
 
     tokens = _input
 
@@ -27,7 +41,7 @@ def sintatico (_input):
     return True
 
 def print_error(expected, line=None):
-    global current_token
+    global current_token, tabela, pilha_tipos
     
     if line == None:
         line = current_token['line']
@@ -38,9 +52,85 @@ def print_error(expected, line=None):
     sys.stdout.flush() #python 2
 
 def getSimbol():
-    global current_token
+    global current_token, tabela, pilha_tipos
     current_token = tokens.pop(0)
     # return current_token
+
+def regride_token():
+    global current_token
+
+    tokens.insert(0, current_token)
+
+
+
+# =======================================
+
+def push_id(token, type):
+    '''
+    Coloca um novo identificador na tabela de identificadores.
+    '''
+    global tabela
+
+    tabela.push_simbolo(token, type)
+
+def has_id(token):
+    '''
+    Verifica se um identificador está na tabela de identificadores.
+    '''
+    global tabela
+    if not tabela.simbolo_na_tabela(token['token']):
+        sys.exit("O símbolo '"+ token['token'] +"' na linha "+ str(token['line']) +" não foi declarado")
+
+def verificar_id(token):
+    '''
+    Verifica se um idenficador está sendo usado ou declarado
+    '''
+    global cont_begin_end
+
+    if cont_begin_end:
+        has_id(token)
+    else:
+        push_id(token['token'], ".")
+
+def verificar_procedimento(token):
+    '''
+    Verifica se o identificador é de um procedimento.
+    '''
+    global tabela
+
+    if tabela.get_simbolo_tipo(token['token']) == "procedure":
+        return True
+
+    return False
+
+def verfica_boolean():
+    '''
+    Verifica se o topo da pilha de tipos é booleano
+    '''
+    global pilha_tipos, current_token
+
+    if pilha_tipos.topo() == "boolean":    #[SMT] verifica se o resultado da expressão é booleano
+        pilha_tipos.pop()  #[SMT] se for boolean, esvazia a pilha
+    else:
+        sys.exit("Era esperado um valor booleano. Linha: " + str(current_token['line']))
+
+def verficar_operacao(operador):
+    '''
+    Verifica se é uma operação lógica ou não e reduz a pilha de tipos
+    '''
+    global pilha_tipos, current_token
+    
+    if operador in ["and","or"]:
+        if not pilha_tipos.reduz_pct_logico(): #[SMT] verifica se foi possível reduzir
+            sys.exit("Incompatibilidade de tipos, eram esperado valores booleanos. Linha: " + str(current_token['line']))
+    else:
+        if not pilha_tipos.reduz_pct():    #[SMT] verifica se foi possível reduzir
+            sys.exit("Incompatibilidade de tipos. Linha: " + str(current_token['line']))
+
+
+
+# ==========================================
+
 
 
 def PROGRAMA():
@@ -52,12 +142,17 @@ def PROGRAMA():
         COMANDO_COMPOSTO
         .
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['token'] == 'program':
+        tabela.novo_escopo()
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
+            tabela.push_simbolo(current_token['token'], 'program') #coloca o identificador do nome do programa na tabela
+            
             getSimbol()
+            
+            
             if current_token['token'] == ';':
                 getSimbol()
                 if not DECLARACOES_VARIAVEIS():
@@ -95,14 +190,13 @@ def PROGRAMA():
     sys.stdout.flush() #python 2
     return True
 
-
 def DECLARACOES_VARIAVEIS():
     """
     DECLARACOES_VARIAVEIS 
         var LISTA_DECLARACOES_VARIAVEIS
         | e
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['token'] == 'var':
         getSimbol()
@@ -113,13 +207,12 @@ def DECLARACOES_VARIAVEIS():
 
     return True
 
-
 def LISTA_DECLARACOES_VARIAVEIS():
     """
     LISTA_DECLARACOES_VARIAVEIS 
         LISTA_DE_IDENTIFICADORES: TIPO; LISTA_DECLARACOES_VARIAVEIS_2
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
     
     if not LISTA_DE_IDENTIFICADORES():
         return False
@@ -153,7 +246,7 @@ def LISTA_DECLARACOES_VARIAVEIS_2():
 
     }
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if not LISTA_DE_IDENTIFICADORES():
         return True # vazio
@@ -179,16 +272,19 @@ def LISTA_DECLARACOES_VARIAVEIS_2():
     # getSimbol()
     return True
 
-
 def LISTA_DE_IDENTIFICADORES():
     """
     LISTA_DE_IDENTIFICADORES 
         id LISTA_DE_IDENTIFICADORES_2
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['classification'] == 'Id\t\t':
+        push_id(current_token['token'], ".")     #[SMT] coloca o identificador na tabela sem tipo
+
         getSimbol()
+
+
         if not LISTA_DE_IDENTIFICADORES_2():
             return False
 
@@ -206,11 +302,15 @@ def LISTA_DE_IDENTIFICADORES_2():
         , id LISTA_DE_IDENTIFICADORES_2
         | e
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
     if current_token['token'] == ',':
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
+            push_id(current_token['token'], ".") #[SMT] coloca o identificador na tabela sem tipo
+
             getSimbol()
+
+
             if not LISTA_DE_IDENTIFICADORES_2():
                 return False
         else:
@@ -222,7 +322,6 @@ def LISTA_DE_IDENTIFICADORES_2():
     # getSimbol()
     return True
 
-
 def TIPO():
     """
     TIPO 
@@ -230,16 +329,19 @@ def TIPO():
         | real
         | boolean
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['token'] == 'integer' or current_token['token'] == 'real' or current_token['token'] == 'boolean':
+        tabela.set_tipo(current_token['token']) #[SMT] acrescenta o tipo nos identificadores sem tipo
+
         getSimbol()
+
+
         return True
 
     else:
-        print_error("'inteiro/real/boolean")
+        print_error("'inteiro/real/boo;lean")
         return False
-
 
 def DECLARACOES_DE_SUBPROGRAMAS():
     """
@@ -247,7 +349,7 @@ def DECLARACOES_DE_SUBPROGRAMAS():
         | DECLARACOES_DE_SUBPROGRAMAS_2
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if not DECLARACOES_DE_SUBPROGRAMAS_2():
         return False
@@ -263,7 +365,7 @@ def DECLARACOES_DE_SUBPROGRAMAS_2():
         | e
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if not DECLARACAO_DE_SUBPROGRAMA():
         return True # vazio
@@ -292,12 +394,17 @@ def DECLARACAO_DE_SUBPROGRAMA():
         COMANDO_COMPOSTO
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
     
     if current_token['token'] == 'procedure':
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
+
+            tabela.push_simbolo(current_token['token'],"procedure") #[SMT] acrescenta o identificador do nome na tabela com o tipo 'procedure'
+            tabela.novo_escopo()   #[SMT] inicia um novo escopo na tabela
+
             getSimbol()
+
             if not ARGUMENTOS():
                 return False
 
@@ -327,7 +434,6 @@ def DECLARACAO_DE_SUBPROGRAMA():
 
     # getSimbol()
     return True
-
 
 def ARGUMENTOS():
     """
@@ -360,7 +466,7 @@ def LISTA_DE_PARAMETROS():
     LISTA_DE_PARAMETROS
         LISTA_DE_IDENTIFICADORES: TIPO LISTA_DE_PARAMETROS_2
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if LISTA_DE_IDENTIFICADORES() == False:
         return False
@@ -384,7 +490,7 @@ def LISTA_DE_PARAMETROS_2():
         ; LISTA_DE_IDENTIFICADORES: TIPO LISTA_DE_PARAMETROS_2
         | e	
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['token'] == ';':
         getSimbol()
@@ -394,6 +500,9 @@ def LISTA_DE_PARAMETROS_2():
 
         if current_token['token'] == ':':
             getSimbol()
+
+            if TIPO() == False:
+                return False
 
             if LISTA_DE_PARAMETROS_2() == False:
                 return False
@@ -416,10 +525,13 @@ def COMANDO_COMPOSTO():
         COMANDOS_OPCIONAIS
         COMANDO_COMPOSTO_DESAMBIGUIDADE
     """
-    global current_token
+    global current_token, tabela, pilha_tipos, cont_begin_end
 
     if current_token['token'] == 'begin':
+        cont_begin_end += 1    #[SMT] incrementa o contador de begin-end
+        
         getSimbol()
+        
         if COMANDOS_OPCIONAIS() == False:
             return False
 
@@ -441,10 +553,18 @@ def COMANDO_COMPOSTO_DESAMBIGUIDADE():
         ; end
         | end
     """
+
+    global cont_begin_end, tabela
+
+
     if current_token['token'] == ";":
         getSimbol()
         if current_token['token'] == 'end':
             getSimbol()
+            
+            cont_begin_end -= 1    #[SMT] decrementa o contador de begin-end
+            if not cont_begin_end: #[SMT] confere se o contador de begin-end é 0
+                tabela.pop_escopo()    #[SMT] remove o escopo atual da tabela
 
         else:
             print_error("end")
@@ -452,6 +572,10 @@ def COMANDO_COMPOSTO_DESAMBIGUIDADE():
     else:
         if current_token['token'] == 'end':
             getSimbol()
+            
+            cont_begin_end -= 1    #[SMT] decrementa o contador de begin-end
+            if not cont_begin_end: #[SMT] confere se o contador de begin-end é 0
+                tabela.pop_escopo()    #[SMT] remove o escopo atual da tabela
 
         else:
             print_error("';' or 'end'")
@@ -466,7 +590,7 @@ def COMANDOS_OPCIONAIS():
         | e
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if LISTA_DE_COMANDOS() == False:
         return False
@@ -481,7 +605,7 @@ def LISTA_DE_COMANDOS():
     LISTA_DE_COMANDOS
         COMANDO LISTA_DE_COMANDOS_2
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if COMANDO() == False:
         return False
@@ -492,7 +616,6 @@ def LISTA_DE_COMANDOS():
 
     # getSimbol()
     return True
-
 
 def LISTA_DE_COMANDOS_2():
     """
@@ -529,6 +652,10 @@ def COMANDO():
         | while EXPRESSAO do COMANDO
         # modificacao: do LISTA_DE_COMANDOS while (EXPRESSAO)
     """
+    global tabela, current_token, pilha_tipos
+    
+    tipo_var = tabela.get_simbolo_tipo(current_token['token'])  #[SMT] guarda o tipo da variável
+
     if not VARIAVEL():
         if not ATIVACAO_DE_PROCEDIMENTO():
             if not COMANDO_COMPOSTO():
@@ -600,11 +727,27 @@ def COMANDO():
                 # ===============================================
 
     else:
+
+
+
         if current_token['token'] == ':=':
             getSimbol()
 
             if not EXPRESSAO():
                 return False
+        
+            #[SMT] confere se o tipo resultante da expressão é equivalente ao tipo da variável
+            if tipo_var == "integer" and pilha_tipos.topo() in ["real","boolean"]:
+                sys.exit("Incompatibilidade de tipos na atribuição para inteiro. Linha: " + str(current_token['line']))
+
+            elif tipo_var == "boolean" and pilha_tipos.topo() != "boolean":
+                sys.exit("Incompatibilidade de tipos na atribuição para booleana. Linha: " + str(current_token['line']))
+
+            elif tipo_var == "real" and pilha_tipos.topo() == "boolean":
+                sys.exit("Incompatibilidade de tipos na atribuição para real. Linha: " + str(current_token['line']))
+
+            else:
+                pilha_tipos.pop()  #[SMT] se for compatível, então esvaiza a pilha
 
         else:
             print_error(':=')
@@ -614,7 +757,6 @@ def COMANDO():
 
     return True
 
-
 def PARTE_ELSE():
     """
     PARTE_ELSE :
@@ -622,7 +764,7 @@ def PARTE_ELSE():
         | e
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['token'] == 'else':
         getSimbol()
@@ -639,10 +781,18 @@ def VARIAVEL():
     VARIAVEL :
 	    id
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
     if current_token['classification'] == 'Id\t\t':
+        # TODO: [SMT] verifica se é um identificador de procedimento
+        if verificar_procedimento(current_token):
+            # regride_token()
+            return False
+
+        verificar_id(current_token) #[SMT] verifica se o identificador está na tabela
+        
         getSimbol()
         return True 
+
     else:
         print_error('Id')
         return False
@@ -653,9 +803,11 @@ def ATIVACAO_DE_PROCEDIMENTO():
 	    id ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['classification'] == 'Id\t\t':
+        has_id(current_token)   #[SMT] verifica se o identificador está na tabela
+
         getSimbol()
 
         if not ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE(): return False
@@ -672,7 +824,7 @@ def ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE():
         (LISTA_DE_EXPRESSOES)
         | e
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
     
     if current_token['token'] == '(':
         getSimbol()
@@ -691,7 +843,6 @@ def ATIVACAO_DE_PROCEDIMENTO_DESAMBIGUIDADE():
     
     return True
 
-
 def OP_MULTIPLICATIVO():
     """
     OP_MULTIPLICATIVO :
@@ -700,7 +851,7 @@ def OP_MULTIPLICATIVO():
         | and
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['token'] == '*' or current_token['token'] == '/' or current_token == 'and':
         getSimbol()
@@ -717,7 +868,7 @@ def OP_ADITIVO():
         | or
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
     if current_token['token'] == '+' or current_token['token'] == '-' or current_token['token'] == 'or':
         getSimbol()
         return True
@@ -736,7 +887,7 @@ def OP_RELACIONAL():
         | <>
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
     if current_token['token'] == '=' or current_token['token'] == '<' or current_token['token'] == '>' or current_token['token'] == '<=' or current_token['token'] == '>=' or current_token['token'] == '<>':
         getSimbol()
         return True
@@ -751,7 +902,7 @@ def SINAL():
         | -
     """
 
-    global current_token
+    global current_token, tabela, pilha_tipos
     if current_token['token'] == '+' or current_token['token'] == '-':
         getSimbol()
         return True
@@ -770,10 +921,17 @@ def FATOR():
         | (EXPRESSAO)
         | not FATOR
     """
-    global current_token
+    global current_token, tabela, pilha_tipos
 
     if current_token['classification'] == 'Id\t\t':
+        # Check if id in table
+        has_id(current_token)
+
+        #[SMT] coloca o tipo do identificador na pilha de tipos
+        pilha_tipos.push(tabela.get_simbolo_tipo(current_token['token']))
+
         getSimbol()
+
         if not FATOR_DESAMBIGUIDADE():
             return False
         else:
@@ -781,14 +939,17 @@ def FATOR():
     else:
 
         if current_token['classification'] == 'Inteiro\t\t':
+            pilha_tipos.push('integer')
             getSimbol()
             return True
 
         if current_token['classification'] == 'Float\t\t':
+            pilha_tipos.push('real')
             getSimbol()
             return True
 
-        if current_token['classification'] == 'true' or current_token['token'] == 'false':
+        if current_token['token'] == 'true' or current_token['token'] == 'false':
+            pilha_tipos.push('boolean')
             getSimbol()
             return True
         
@@ -820,7 +981,7 @@ def FATOR_DESAMBIGUIDADE():
         | e
     """
     
-    global current_token
+    global current_token, tabela, pilha_tipos
     if current_token['token'] == '(':
         getSimbol()
         if not LISTA_DE_EXPRESSOES():
@@ -875,9 +1036,8 @@ def EXPRESSAO():
     EXPRESAO
         EXPRESSAO_SIMPLES EXPRESSAO_DESAMBIGUIDADE
     """
-
     if not EXPRESAO_SIMPLES() : return False
-
+        
     if not EXPRESSAO_DESAMBIGUIDADE(): return False
 
     return True
@@ -887,12 +1047,20 @@ def EXPRESSAO_DESAMBIGUIDADE():
     e
 	| OP_RELACIONAL EXPRESSAO_SIMPLES
     """
+    
+    global pilha_tipos, current_token
+
     if not OP_RELACIONAL():
         return True # vazio
+
 
     if not EXPRESAO_SIMPLES():
         return False
 
+    #[SMT] verifica a pilha de tipos
+    if not pilha_tipos.reduz_pct_relacional():
+        sys.exit("Incompatibilidade de tipos. Linha: " + str(current_token['line']))
+    
     return True
 
 def EXPRESAO_SIMPLES():
@@ -919,12 +1087,15 @@ def EXPRESSAO_SIMPLES_2 ():
 	    OP_ADITIVO TERMO EXPRESSAO_SIMPLES_2
 	    | e
     """
+    global current_token
 
     if not OP_ADITIVO():
         return True # vazio
 
     if not TERMO() : return False
     if not EXPRESSAO_SIMPLES_2() : return False
+
+    verficar_operacao(current_token['token'])
 
     return True
 
@@ -944,10 +1115,13 @@ def TERMO_2():
         OP_MULTIPLICATIVO FATOR
         | e
     """
+    global current_token
 
     if not OP_MULTIPLICATIVO():
         return True # vazio
 
     if not FATOR(): return False
+
+    verficar_operacao(current_token['token'])
 
     return True
