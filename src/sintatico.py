@@ -15,6 +15,7 @@ current_token = {
 
 # global auxiliary objects
 tabela = SymbolsTable()
+tabela_de_procedimentos = SymbolsTable()
 pilha_tipos = TypesStack()
 
 cont_begin_end = 0 # counter of begin and ends
@@ -73,12 +74,27 @@ def push_id(token, type):
 
     tabela.push_simbolo(token, type)
 
+def push_id_procedimento(token, type):
+    '''
+    Coloca um novo identificador na tabela de identificadores.
+    '''
+    global tabela_de_procedimentos
+
+    tabela_de_procedimentos.push_simbolo(token, type)
+
 def has_id(token):
     '''
     Verifica se um identificador está na tabela de identificadores.
     '''
     global tabela
     if not tabela.simbolo_na_tabela(token['token']):
+        sys.exit("O símbolo '"+ token['token'] +"' na linha "+ str(token['line']) +" não foi declarado")
+def has_id_procedimento(token):
+    '''
+    Verifica se um identificador está na tabela de identificadores.
+    '''
+    global tabela_de_procedimentos
+    if not tabela_de_procedimentos.simbolo_na_tabela(token['token']):
         sys.exit("O símbolo '"+ token['token'] +"' na linha "+ str(token['line']) +" não foi declarado")
 
 def verificar_id(token):
@@ -92,13 +108,24 @@ def verificar_id(token):
     else:
         push_id(token['token'], ".")
 
+def verificar_id_procedimento(token):
+    '''
+    Verifica se um idenficador está sendo usado ou declarado
+    '''
+    global cont_begin_end
+
+    if cont_begin_end:
+        has_id_procedimento(token)
+    else:
+        push_id_procedimento(token['token'], ".")
+
 def verificar_procedimento(token):
     '''
     Verifica se o identificador é de um procedimento.
     '''
-    global tabela
+    global tabela_de_procedimentos
 
-    if tabela.get_simbolo_tipo(token['token']) == "procedure":
+    if tabela_de_procedimentos.get_simbolo_tipo(token['token']) == "procedure":
         return True
 
     return False
@@ -146,6 +173,7 @@ def PROGRAMA():
 
     if current_token['token'] == 'program':
         tabela.novo_escopo()
+        tabela_de_procedimentos.novo_escopo()
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
             tabela.push_simbolo(current_token['token'], 'program') #coloca o identificador do nome do programa na tabela
@@ -400,7 +428,7 @@ def DECLARACAO_DE_SUBPROGRAMA():
         getSimbol()
         if current_token['classification'] == 'Id\t\t':
 
-            tabela.push_simbolo(current_token['token'],"procedure") #[SMT] acrescenta o identificador do nome na tabela com o tipo 'procedure'
+            tabela_de_procedimentos.push_simbolo(current_token['token'],"procedure") #[SMT] acrescenta o identificador do nome na tabela com o tipo 'procedure'
             tabela.novo_escopo()   #[SMT] inicia um novo escopo na tabela
 
             getSimbol()
@@ -806,7 +834,7 @@ def ATIVACAO_DE_PROCEDIMENTO():
     global current_token, tabela, pilha_tipos
 
     if current_token['classification'] == 'Id\t\t':
-        has_id(current_token)   #[SMT] verifica se o identificador está na tabela
+        has_id_procedimento(current_token)   #[SMT] verifica se o identificador está na tabela
 
         getSimbol()
 
